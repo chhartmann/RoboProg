@@ -21,7 +21,7 @@
 #include <rclc/executor.h>
 #include <std_msgs/msg/int32.h>
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){ Serial.println("ros call failed");}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){ Serial.println(#fn ## " failed");}}
 
 AsyncWebServer server(3232);
 LuaWrapper lua;
@@ -74,7 +74,8 @@ void setup() {
    Serial.begin(115200);
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS);
+    set_microros_wifi_transports(MY_WIFY_SSID, MY_WIFY_PASS, "192.168.0.162", 8888);
+//    WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hi! I am ESP32.");
@@ -99,7 +100,7 @@ void setup() {
 //    String script = String("print('Hello World')");
     Serial.println(lua.Lua_dostring(&script));
 
-      set_microros_transports();
+    // Initialize the ROS node
       allocator = rcl_get_default_allocator();
       RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
