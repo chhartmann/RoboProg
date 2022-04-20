@@ -1,6 +1,13 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#if __has_include("wifi_secrets.h")
 #include "wifi_secrets.h"
+#if not defined(MY_WIFY_SSID) || not defined(MY_WIFY_PASS)
+#error "MY_WIFIY_SSID and MY_WIFIY_PASS must be defined in wifi_secrets.h"
+#endif
+#else
+#error "wifi_secrets.h has to be provided with your WiFi credentials"
+#endif
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <LuaWrapper.h>
