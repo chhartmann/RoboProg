@@ -13,7 +13,9 @@
 #include <LuaWrapper.h>
 #include <SPIFFS.h>
 #include <ArduinoOTA.h>
+#include <ESP32Servo.h>
 
+// ROS
 #include <micro_ros_arduino.h>
 #include <stdio.h>
 #include <rcl/error_handling.h>
@@ -21,7 +23,9 @@
 #include <rclc/executor.h>
 #include <std_msgs/msg/int32.h>
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){ Serial.println(#fn ## " failed");}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("failed in line %i\n", __LINE__);}}
+
+// Global variables
 
 AsyncWebServer server(3232);
 LuaWrapper lua;
@@ -33,6 +37,18 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t timer;
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+Servo servo4;
+
+int servo1Pin = 15;
+int servo2Pin = 16;
+int servo3Pin = 14;
+int servo4Pin = 4;
+
+int pos = 0;
 
 void setupOta() {
   ArduinoOTA
@@ -66,7 +82,9 @@ void setupOta() {
 void subscription_callback(const void * msgin)
 {  
   const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  digitalWrite(2, (msg->data == 0) ? LOW : HIGH);
+  pos = msg->data;
+  		servo1.write(pos);
+
   Serial.println("message received");
 }
 
@@ -82,8 +100,18 @@ void setup() {
     });
 
     server.begin();
-
     setupOta();
+
+  // Setup Servos
+  servo1.setPeriodHertz(50);
+  servo2.setPeriodHertz(50);
+  servo3.setPeriodHertz(50);
+  servo4.setPeriodHertz(50);
+
+  servo1.attach(servo1Pin);
+  servo2.attach(servo2Pin);
+  servo3.attach(servo3Pin);
+  servo4.attach(servo4Pin);
 
    if(!SPIFFS.begin()){
       while(1);
@@ -120,6 +148,7 @@ void setup() {
 }
 
 void loop() {
+
     ArduinoOTA.handle();
     RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 }
