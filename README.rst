@@ -17,3 +17,10 @@ How to use
 **********
 * Start micro-ROS agent: docker run -it --rm --net=host microros/micro-ros-agent:galactic udp4 --port 8888 -v6
 
+ROS2 commands
+**************
+* ros2 node list
+* ros2 topic list -t
+* ros2 interface show std_msgs/msg/Int32
+* ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32 "{'data':0}"
+
