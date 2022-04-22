@@ -21,9 +21,9 @@
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
-#include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/int32_multi_array.h>
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("failed in line %i\n", __LINE__);}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("failed in line %i with error code %i\n", __LINE__, temp_rc);}}
 
 // Global variables
 
@@ -31,7 +31,7 @@ AsyncWebServer server(3232);
 LuaWrapper lua;
 
 rcl_subscription_t subscriber;
-std_msgs__msg__Int32 msg;
+std_msgs__msg__Int32MultiArray msg;
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -47,8 +47,6 @@ int servo1Pin = 15;
 int servo2Pin = 16;
 int servo3Pin = 14;
 int servo4Pin = 4;
-
-int pos = 0;
 
 void setupOta() {
   ArduinoOTA
@@ -81,18 +79,19 @@ void setupOta() {
 
 void subscription_callback(const void * msgin)
 {  
-  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  pos = msg->data;
-  		servo1.write(pos);
+  const std_msgs__msg__Int32MultiArray * msg = (const std_msgs__msg__Int32MultiArray *)msgin;
+//  		servo1.write(pos);
 
-  Serial.println("message received");
+  for (int i = 0; i < msg->data.size; ++i) {
+    Serial.println(msg->data.data[i]);
+  }
 }
 
 void setup() {
    Serial.begin(115200);
 
     WiFi.mode(WIFI_STA);
-    set_microros_wifi_transports(MY_WIFY_SSID, MY_WIFY_PASS, "192.168.0.162", 8888);
+    set_microros_wifi_transports(MY_WIFY_SSID, MY_WIFY_PASS, (char*)"192.168.0.162", 8888);
 //    WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -103,11 +102,6 @@ void setup() {
     setupOta();
 
   // Setup Servos
-  servo1.setPeriodHertz(50);
-  servo2.setPeriodHertz(50);
-  servo3.setPeriodHertz(50);
-  servo4.setPeriodHertz(50);
-
   servo1.attach(servo1Pin);
   servo2.attach(servo2Pin);
   servo3.attach(servo3Pin);
@@ -139,8 +133,20 @@ void setup() {
       RCCHECK(rclc_subscription_init_default(
         &subscriber,
         &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray),
         "micro_ros_arduino_subscriber"));
+
+      // Initialize message
+      static std_msgs__msg__MultiArrayDimension dim;
+      static char* dim_name = (char*)"joint_angle";
+      dim.label = {dim_name, strlen(dim_name), strlen(dim_name)};
+      dim.size = 1;
+      dim.stride = 0;
+      msg.layout.dim.data = &dim;
+      msg.layout.data_offset = 0;
+      msg.data.data = (int32_t*)malloc(sizeof(int32_t)*4);
+      msg.data.size = 0;
+      msg.data.capacity = 4;
 
       // create executor
       RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));

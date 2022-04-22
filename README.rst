@@ -21,6 +21,7 @@ ROS2 commands
 **************
 * ros2 node list
 * ros2 topic list -t
-* ros2 interface show std_msgs/msg/Int32
-* ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32 "{'data':0}"
+* ros2 interface show std_msgs/msg/Int32MultiArray
+* ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32MultiArray "{'data': [1, 2]}"
+
 
