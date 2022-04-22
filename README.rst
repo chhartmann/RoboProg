@@ -1,10 +1,11 @@
 Getting Started
 ***************
 
-A micro platform for controlling a robot arm.
-* Web UI
+A micro platform for controlling a robot arm via
+* Web UI for jogging
 * Programmable via Lua script
-* ROS interface
+* REST interface
+* ROS2 interface
 
 Status
 ******
@@ -22,6 +23,4 @@ ROS2 commands
 * ros2 node list
 * ros2 topic list -t
 * ros2 interface show std_msgs/msg/Int32MultiArray
-* ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32MultiArray "{'data': [1, 2]}"
-
-
+* ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32MultiArray "{'data': [10, 20, 30, 40]}"

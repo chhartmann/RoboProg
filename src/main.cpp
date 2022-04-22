@@ -43,10 +43,9 @@ Servo servo2;
 Servo servo3;
 Servo servo4;
 
-int servo1Pin = 15;
-int servo2Pin = 16;
-int servo3Pin = 14;
-int servo4Pin = 4;
+static Servo* const servos[] = {&servo1, &servo2, &servo3, &servo4};
+static const int num_servos = sizeof(servos) / sizeof(Servo*);
+static const int servo_pins[] = {15, 16, 14, 4};
 
 void setupOta() {
   ArduinoOTA
@@ -83,7 +82,7 @@ void subscription_callback(const void * msgin)
 //  		servo1.write(pos);
 
   for (int i = 0; i < msg->data.size; ++i) {
-    Serial.println(msg->data.data[i]);
+    servos[i]->write(msg->data.data[i]);
   }
 }
 
@@ -91,7 +90,11 @@ void setup() {
    Serial.begin(115200);
 
     WiFi.mode(WIFI_STA);
-    set_microros_wifi_transports(MY_WIFY_SSID, MY_WIFY_PASS, (char*)"192.168.0.162", 8888);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+    set_microros_wifi_transports(MY_WIFY_SSID, MY_WIFY_PASS, "192.168.0.162", 8888);
+#pragma GCC diagnostic pop
+    
 //    WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS);
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -102,10 +105,9 @@ void setup() {
     setupOta();
 
   // Setup Servos
-  servo1.attach(servo1Pin);
-  servo2.attach(servo2Pin);
-  servo3.attach(servo3Pin);
-  servo4.attach(servo4Pin);
+  for (int i = 0; i < num_servos; i++) {
+    servos[i]->attach(servo_pins[i]);
+  }
 
    if(!SPIFFS.begin()){
       while(1);
@@ -144,9 +146,9 @@ void setup() {
       dim.stride = 0;
       msg.layout.dim.data = &dim;
       msg.layout.data_offset = 0;
-      msg.data.data = (int32_t*)malloc(sizeof(int32_t)*4);
+      msg.data.data = (int32_t*)malloc(sizeof(int32_t)*num_servos);
       msg.data.size = 0;
-      msg.data.capacity = 4;
+      msg.data.capacity = num_servos;
 
       // create executor
       RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
