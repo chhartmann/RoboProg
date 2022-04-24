@@ -10,6 +10,8 @@
 #endif
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <AsyncJson.h>
+#include <ArduinoJson.h>
 #include <LuaWrapper.h>
 #include <SPIFFS.h>
 #include <ArduinoOTA.h>
@@ -23,11 +25,11 @@
 #include <rclc/executor.h>
 #include <std_msgs/msg/int32_multi_array.h>
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("failed in line %i with error code %i\n", __LINE__, temp_rc);}}
+#define RCCHECK(fn) { if (!ros_connection_failed) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("ROS failed in line %i with error code %i\n", __LINE__, temp_rc); ros_connection_failed = true;}} }
 
 // Global variables
 
-AsyncWebServer server(3232);
+AsyncWebServer server(80);
 LuaWrapper lua;
 
 rcl_subscription_t subscriber;
@@ -37,6 +39,7 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t timer;
+bool ros_connection_failed = true; // TODO: set to false to activate ROS
 
 Servo servo1;
 Servo servo2;
@@ -55,8 +58,8 @@ void setupOta() {
         type = "sketch";
       else // U_SPIFFS
         type = "filesystem";
-        SPIFFS.end();
-      Serial.println("Start updating " + type);
+      SPIFFS.end();
+      Serial.println("Start updating " + type);      
     })
     .onEnd([]() {
       Serial.println("\nEnd");
@@ -79,7 +82,6 @@ void setupOta() {
 void subscription_callback(const void * msgin)
 {  
   const std_msgs__msg__Int32MultiArray * msg = (const std_msgs__msg__Int32MultiArray *)msgin;
-//  		servo1.write(pos);
 
   for (int i = 0; i < msg->data.size; ++i) {
     servos[i]->write(msg->data.data[i]);
@@ -97,9 +99,44 @@ void setup() {
     
 //    WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS);
 
+    // send html page from file
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "Hi! I am ESP32.");
+      request->send(SPIFFS, "/index.html", "text/html");
     });
+
+    server.on("/test", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(200, "text/plain", "OK");
+    });
+
+    // REST API
+    server.on("/rest/get_joint_angles", HTTP_GET, [] (AsyncWebServerRequest *request) {
+      StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
+      JsonArray angles = doc.to<JsonArray>();
+      for (int i = 0; i < num_servos; ++i) {
+        angles.add(servos[i]->read());
+      }
+      String response;
+      serializeJson(doc, response);
+//      Serial.println(response);
+      request->send(200, "application/json", response);
+    });
+
+    AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/rest/set_joint_angles", [](AsyncWebServerRequest *request, JsonVariant &json) {
+      StaticJsonDocument<200> data;
+      if (json.is<JsonArray>())
+      {
+        data = json.as<JsonArray>();
+        for (int i = 0; i < data.size(); ++i) {
+          servos[i]->write(data[i]);
+        }
+      }
+      String response;
+      serializeJson(data, response);
+//      Serial.println(response);
+      request->send(200, "application/json", response);
+    });
+    server.addHandler(handler);
+
 
     server.begin();
     setupOta();
