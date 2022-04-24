@@ -88,6 +88,41 @@ void subscription_callback(const void * msgin)
   }
 }
 
+static int lua_set_joint_angles(lua_State *lua_state) {
+  for (int i = 0; i < num_servos; ++i) {
+    servos[i]->write(lua_tointeger(lua_state, i + 1));
+  }
+  return 0;
+}
+
+static int lua_wrapper_pinMode(lua_State *lua_state) {
+  int a = luaL_checkinteger(lua_state, 1);
+  int b = luaL_checkinteger(lua_state, 2);
+  pinMode(a, b);
+  return 0;
+}
+
+static int lua_wrapper_digitalWrite(lua_State *lua_state) {
+  int a = luaL_checkinteger(lua_state, 1);
+  int b = luaL_checkinteger(lua_state, 2);
+  digitalWrite(a, b);
+  return 0;
+}
+
+static int lua_wrapper_digitalRead(lua_State *lua_state) {
+  int a = luaL_checkinteger(lua_state, 1);
+  int val = digitalRead(a);
+  lua_pushnumber(lua_state, val);
+  return 0;
+}
+
+static int lua_wrapper_delay(lua_State *lua_state) {
+  int a = luaL_checkinteger(lua_state, 1);
+  delay(a);
+  return 0;
+}
+
+
 void setup() {
    Serial.begin(115200);
 
@@ -109,6 +144,15 @@ void setup() {
     });
 
     // REST API
+    server.on("/rest/run_script", HTTP_POST, [](AsyncWebServerRequest * request){},
+        NULL,
+        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
+    
+        String script = (char*)data;
+        String result = lua.Lua_dostring(&script);
+        request->send(200, "text/plain", result);
+      });
+
     server.on("/rest/get_joint_angles", HTTP_GET, [] (AsyncWebServerRequest *request) {
       StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
       JsonArray angles = doc.to<JsonArray>();
@@ -150,16 +194,21 @@ void setup() {
       while(1);
    }
 
-    File file = SPIFFS.open("/main.lua", "r");
-    if (!file) {
-        Serial.println("Failed to open file for reading");
-        while (1);
-    }
+  lua.Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
+  lua.Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
+  lua.Lua_register("digitalWrite", (const lua_CFunction) &lua_wrapper_digitalWrite);
+  lua.Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
+  lua.Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
 
-    String script = file.readString();
-    file.close();
+    // File file = SPIFFS.open("/main.lua", "r");
+    // if (!file) {
+    //     Serial.println("Failed to open file for reading");
+    // }
+
+    // String script = file.readString();
+    // file.close();
 //    String script = String("print('Hello World')");
-    Serial.println(lua.Lua_dostring(&script));
+//    Serial.println(lua.Lua_dostring(&script));
 
     // Initialize the ROS node
       allocator = rcl_get_default_allocator();

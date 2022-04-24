@@ -9,6 +9,7 @@ A micro platform for controlling a robot arm via
 
 Status
 ******
+* Angles are not limited to physical limits (neither in UI nor in controller)
 * Web UI under construction
 * Configuration for wifi settings and ros agent are hard coded
 * Programmable via Lua script not yet implemented
