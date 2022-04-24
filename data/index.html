@@ -24,7 +24,6 @@ body {
 
 .main {
 margin-left: 100px; /* Same as the width of the sidenav */
-  font-size: 28px; /* Increased text to enable scrolling */
   padding: 0px 10px;
 }
 
@@ -88,6 +87,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
         <label for="luaScriptTextarea" class="form-label">Robo Script</label>
         <textarea class="form-control" id="luaScriptTextarea" rows="10"></textarea>
       </div>
+      <div id="lua-status" class="alert alert-primary" role="alert">Status</div>
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
     <button id="btn-save-lua" type="button" class="btn-label btn btn-outline-primary">Save</button>
 </div>
@@ -161,14 +161,14 @@ margin-left: 100px; /* Same as the width of the sidenav */
     });
 
     $('#btn-run-lua').click(function(){
+        $('#lua-status').text("Running");
         $.ajax({
         type: "POST",
         url: "/rest/run_script",
         data: $("#luaScriptTextarea").val(),
         contentType: 'text/plain',
         success: function(data) {
-            console.log(data);
-        }
+            $('#lua-status').text(data.length > 0 ? data : "Finished "); }
         });
     });
 
@@ -177,7 +177,9 @@ margin-left: 100px; /* Same as the width of the sidenav */
         type: "POST",
         url: "/rest/save_script",
         data: $("#luaScriptTextarea").val(),
-        contentType: 'text/plain'        
+        contentType: 'text/plain',
+        success: function(data) {
+            $('#lua-status').text("Saved"); }
         });
     });
 </script>

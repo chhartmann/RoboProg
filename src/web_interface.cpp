@@ -27,6 +27,7 @@ void web_setup() {
     
         String script = (char*)data;
         String result = lua.Lua_dostring(&script);
+        Serial.println("Script finished.");
         request->send(200, "text/plain", result);
       });
 

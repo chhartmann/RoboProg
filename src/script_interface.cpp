@@ -5,7 +5,7 @@ LuaWrapper lua;
 
 static int lua_set_joint_angles(lua_State *lua_state) {
   for (int i = 0; i < num_servos; ++i) {
-    servos[i]->write(lua_tointeger(lua_state, i + 1));
+    servos[i]->write(luaL_checkinteger(lua_state, i + 1));
   }
   return 0;
 }

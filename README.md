@@ -16,7 +16,6 @@ Status
 ******
 
 * Angles are not limited to physical limits (neither in UI nor in controller)
-* Lua error code is logged in web console / no info when script is finished
 * Manual control: press and hold not yet implemented
 * Configuration for wifi settings and ros agent are hard coded
 * Touchup position and append to position file to be used in Lua not implemented
