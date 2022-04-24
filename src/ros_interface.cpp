@@ -26,7 +26,7 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t timer;
-bool ros_connection_failed = true; // TODO: set to false to activate ROS
+bool ros_connection_failed = false;
 
 void subscription_callback(const void * msgin)
 {  
