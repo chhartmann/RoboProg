@@ -1,1 +1,1 @@
-print("Hello world new!")
+setJointAngles(10,20,30,40)
