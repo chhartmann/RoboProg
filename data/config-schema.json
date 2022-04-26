@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+      "limits": {
+        "type": "array",
+        "description": "Limits of the joints",
+        "items": [
+          {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 180
+              },
+              "max": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 180
+              }
+            },
+            "required": [
+              "min",
+              "max"
+            ]
+          }
+        ]
+      },
+      "Wifi-SSID": {
+        "type": "string",
+        "description": "WiFi SSID",
+      },
+      "Wifi-Password": {
+        "type": "string",
+        "description": "WiFi Password",
+      },
+      "Hostname": {
+        "type": "string",
+        "description": "Hostname of the RobotProg controller",
+      },
+      "ROS-Agent-IP": {
+        "type": "string",
+        "description": "IP of the ROS Agent",
+        "pattern" : "([0-9]{1,3}\.){3}[0-9]{1,3}"
+      }
+    },
+    "required": [
+      "limits",
+      "Wifi-SSID",
+      "Wifi-Password",
+      "Hostname",
+      "ROS-Agent-IP"
+    ]
+  }

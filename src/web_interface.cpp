@@ -9,6 +9,7 @@
 
 AsyncWebServer server(80);
 const char* robo_script_name = "/script.lua";
+const char* config_file_name = "/config.json";
 
 void web_setup() {
     // send html page from file
@@ -45,6 +46,31 @@ void web_setup() {
 
     server.on("/rest/read_script", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(SPIFFS, robo_script_name, "text/plain");
+    });
+
+    server.on("/rest/read_config", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, config_file_name, "text/plain");
+    });
+
+    server.on("/rest/read_schema", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(SPIFFS, "/config-schema.json", "text/plain");
+    });
+
+    server.on("/rest/save_config", HTTP_POST, [](AsyncWebServerRequest * request){},
+        NULL,
+        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
+    
+        String script = (char*)data;
+        File f = SPIFFS.open(config_file_name, "w");
+        f.print(script);
+        f.close();
+
+        request->send(200);
+      });
+
+    server.on("/rest/restart", HTTP_GET, [](AsyncWebServerRequest *request) {
+      request->send(200);
+      ESP.restart();
     });
 
     server.on("/rest/get_joint_angles", HTTP_GET, [] (AsyncWebServerRequest *request) {

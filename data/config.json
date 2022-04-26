@@ -1,0 +1,19 @@
+{
+	"limits": [{
+		"min": 0,
+		"max": 180
+	}, {
+		"min": 0,
+		"max": 180
+	}, {
+		"min": 0,
+		"max": 180
+	}, {
+		"min": 0,
+		"max": 180
+	}],
+	"Wifi-SSID": "",
+	"Wifi-Password": "",
+	"Hostname": "ESP-RobotProg",
+	"ROS-Agent-IP": "192.168.0.162"
+}

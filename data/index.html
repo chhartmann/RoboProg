@@ -5,7 +5,9 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />        
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" crossorigin="anonymous"></script>
-<style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.min.js" integrity="sha512-KQaWlVsZF0iPXCR8p176hVrg/rlw+smy8dpJ+vwiuvoHyGr8PTVvaAV4ZmsAYdCvMRP8e3sB9pl1mRuaunaXrg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.css" integrity="sha512-XmjnlPNi5tkrcqMGEG7ZOpGhny9t8fdCk0oxZxjFaqF3cl3UKv+51GgeUoY3Rf/ZaGtBvMZ9dDhceGZ1hcOyMw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
 body {
     background-color: #eee
 }
@@ -91,9 +93,26 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
     <button id="btn-save-lua" type="button" class="btn-label btn btn-outline-primary">Save</button>
 </div>
+<div id="main_settings" style="display: none" class="main">
+    <div id="jsoneditor"></div>
+    <div class="row" style="height:10px;"></div>
+    <button id="btn-save-config" type="button" class="btn-label btn btn-outline-primary">Save</button>
+    <button id="btn-restart" type="button" class="btn-label btn btn-outline-primary">Restart</button>
+</div>
 
 </body>
 <script>
+
+    var options = {
+        mode: 'form',
+        search: false,
+        name: "Settings",
+        onError: function (err) {
+            alert(err.toString());
+        }
+    };
+    const configEditor = new JSONEditor(document.getElementById('jsoneditor'), options);
+
     function get_joint_angles_from_display() {
         var pos = [];
         for (var i = 0; i < 4; i++) {
@@ -131,6 +150,14 @@ margin-left: 100px; /* Same as the width of the sidenav */
         get_joint_angles_from_controller();
         $.get("/rest/read_script", function(data) {
             $("#luaScriptTextarea").val(data);
+        });
+
+        $.get("/rest/read_config", function(data) {
+            configEditor.setText(data);
+        });
+
+        $.get("/rest/read_schema", function(data) {
+            configEditor.setSchema(data);
         });
     });
 
@@ -182,5 +209,22 @@ margin-left: 100px; /* Same as the width of the sidenav */
             $('#lua-status').text("Saved"); }
         });
     });
+
+    $('#btn-save-config').click(function(){
+        $.ajax({
+        type: "POST",
+        url: "/rest/save_config",
+        data: configEditor.getText(),
+        contentType: 'text/plain'});
+    });
+
+    $('#btn-restart').click(function(){
+        $.ajax({
+        type: "POST",
+        url: "/rest/restart",
+        data: "restart",
+        contentType: 'text/plain'});
+    });
+
 </script>
 </html>
