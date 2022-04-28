@@ -64,6 +64,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     </ul>
 </div>
 <div id="main_manual" class="main">
+    <div class="row" style="height:10px;"></div>
     <button id="btn-home" type="button" class="btn-label btn btn-outline-primary">Home</button>
     <div class="btn-group-vertical">
         <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">A1 +</button>
@@ -141,7 +142,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
             url: "/rest/set_joint_angles", 
             data: JSON.stringify(angles),
             success: function(data) {
-                set_joint_angles_on_display(angles);
+                get_joint_angles_from_controller();
             }
         });
     }
