@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <SPIFFS.h>
 #include <ArduinoOTA.h>
+#include <ArduinoJson.h>
 
 #include <ros_interface.h>
 #include <web_interface.h>
@@ -47,11 +48,34 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
 
-  // WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS) is implicitly done by ros_setup()
-  ros_setup();    
+  // load config from file
+  DynamicJsonDocument configDoc(256);
+  File configFile = SPIFFS.open("/config.json", "r");
+  DeserializationError jsonError = deserializeJson(configDoc, configFile);
+  configFile.close();
+  if (jsonError) {
+    Serial.println("deserializeJson() failed for config file");
+  }
+  JsonObject configObj = configDoc.to<JsonObject>();
+
+
+#if defined(MY_WIFY_SSID) && defined(MY_WIFY_PASS)
+    if (configObj["Wifi-SSID"] == "") {
+      configObj["Wifi-SSID"] = MY_WIFY_SSID;
+      configObj["Wifi-Password"] = MY_WIFY_PASS;
+    }
+#endif
+
+  if (configObj["Wifi-SSID"] == "") {
+    WiFi.softAP("RobotProg");
+  } else {
+    // WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS) is implicitly done by ros_setup()
+    ros_setup(configObj);
+  }
+
   web_setup();
   setupOta();
-  servo_setup();
+  servo_setup(configObj);
   script_setup();
 }
 

@@ -77,7 +77,7 @@ void web_setup() {
       StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
       JsonArray angles = doc.to<JsonArray>();
       for (int i = 0; i < num_servos; ++i) {
-        angles.add(servos[i]->read());
+        angles.add(get_servo_angle(i));
       }
       String response;
       serializeJson(doc, response);
@@ -91,7 +91,7 @@ void web_setup() {
       {
         data = json.as<JsonArray>();
         for (int i = 0; i < data.size(); ++i) {
-          servos[i]->write(data[i]);
+          set_servo_angle(i, data[i]);
         }
       }
       String response;

@@ -9,13 +9,15 @@ A micro platform for controlling a robot arm via
 http://www.eezyrobots.it/eba_mk1.html
 
 # Status
-* Angles are not limited to physical limits (neither in UI nor in controller)
 * Manual control: press and hold not yet implemented
-* Config data not used
 * Touchup position and append to position file to be used in Lua not implemented
 * No release binary available before configuration over web UI is implemented
 * ROS interface needs Agent (at startup) - not based on embeddedRTPS yet (see https://github.com/micro-ROS/micro_ros_espidf_component)
 * Not tested with robot yet
+
+# How to use
+* Servos controlled at pins 15, 16, 14, 4
+* When SSID is not configured, WIFI access point is started (ROS interface is not working in AP mode)
 
 # REST API
 * /rest/get_joint_angles / HTTP_GET / application/json

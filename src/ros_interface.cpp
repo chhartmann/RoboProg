@@ -1,3 +1,4 @@
+#include <ArduinoJson.h>
 #include <ros_interface.h>
 #include <micro_ros_arduino.h>
 #include <stdio.h>
@@ -8,11 +9,6 @@
 
 #if __has_include("wifi_secrets.h")
 #include "wifi_secrets.h"
-#if not defined(MY_WIFY_SSID) || not defined(MY_WIFY_PASS)
-#error "MY_WIFIY_SSID and MY_WIFIY_PASS must be defined in wifi_secrets.h"
-#endif
-#else
-#error "wifi_secrets.h has to be provided with your WiFi credentials"
 #endif
 
 #include <servo_handler.h>
@@ -33,15 +29,21 @@ void subscription_callback(const void * msgin)
   const std_msgs__msg__Int32MultiArray * msg = (const std_msgs__msg__Int32MultiArray *)msgin;
 
   for (int i = 0; i < msg->data.size; ++i) {
-    servos[i]->write(msg->data.data[i]);
+    set_servo_angle(i, msg->data.data[i]);
   }
 }
 
-void ros_setup() {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"
-    set_microros_wifi_transports(MY_WIFY_SSID, MY_WIFY_PASS, "192.168.0.162", 8888);
-#pragma GCC diagnostic pop
+void ros_setup(JsonObject const config) {
+    if (!config.containsKey("ROS-Agent-IP")) {
+      Serial.println("ROS-Agent-IP not found in config file");
+      return;
+    }
+
+    const char* ros_ip = config["ROS-Agent-IP"];
+    const char* ssid = config["Wifi-SSID"];
+    const char* pwd = config["Wifi-Password"];
+    
+    set_microros_wifi_transports((char*)ssid, (char*)pwd, (char*)ros_ip, 8888);
 
     // Initialize the ROS node
       allocator = rcl_get_default_allocator();
