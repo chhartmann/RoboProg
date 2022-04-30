@@ -93,6 +93,22 @@ void setup() {
 }
 
 void loop() {
+    static int prev_servo_pos[num_servos] = {0};
+
     ArduinoOTA.handle();
     ros_loop();
+
+    // if a servo has changed position, send it to the frontend
+    bool publish_servo_pos = false;
+    for (int i = 0; i < num_servos; i++) {
+      int angle = get_servo_angle(i);
+      if (angle != prev_servo_pos[i]) {
+        prev_servo_pos[i] = angle;
+        publish_servo_pos = true;
+      }
+    }
+    if (publish_servo_pos) {
+      String servo_pos_json = get_servo_angles_as_json();
+      web_send_event("servo_pos", servo_pos_json);
+    }
 }

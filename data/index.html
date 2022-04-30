@@ -129,6 +129,12 @@ margin-left: 100px; /* Same as the width of the sidenav */
         }
     };
     const configEditor = new JSONEditor(document.getElementById('jsoneditor'), options);
+    var source = new EventSource('/events');
+
+    source.addEventListener('servo_pos', function (e) {
+//        console.log("event received: " + e.data);
+        set_joint_angles_on_display(JSON.parse(e.data));
+    }, false);
 
     function get_joint_angles_from_display() {
         var pos = [];
@@ -157,9 +163,6 @@ margin-left: 100px; /* Same as the width of the sidenav */
             contentType: "application/json", 
             url: "/rest/set_joint_angles", 
             data: JSON.stringify(angles),
-            success: function(data) {
-                get_joint_angles_from_controller();
-            }
         });
     }
 

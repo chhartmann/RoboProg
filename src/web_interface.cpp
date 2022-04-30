@@ -8,6 +8,8 @@
 #include <servo_handler.h>
 
 AsyncWebServer server(80);
+AsyncEventSource events("/events");
+
 const char* robo_script_name = "/script.lua";
 const char* config_file_name = "/config.json";
 
@@ -104,15 +106,7 @@ void web_setup() {
 
 
     server.on("/rest/get_joint_angles", HTTP_GET, [] (AsyncWebServerRequest *request) {
-      StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
-      JsonArray angles = doc.to<JsonArray>();
-      for (int i = 0; i < num_servos; ++i) {
-        angles.add(get_servo_angle(i));
-      }
-      String response;
-      serializeJson(doc, response);
-//      Serial.println(response);
-      request->send(200, "application/json", response);
+      request->send(200, "application/json", get_servo_angles_as_json());
     });
 
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/rest/set_joint_angles", [](AsyncWebServerRequest *request, JsonVariant &json) {
@@ -131,6 +125,17 @@ void web_setup() {
     });
     server.addHandler(handler);
 
+    events.onConnect([](AsyncEventSourceClient *client){
+      if(client->lastId()){
+        Serial.printf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
+      }
+//      client->send("hello!",NULL,millis(),1000);
+    });
+    server.addHandler(&events);
 
     server.begin();
+}
+
+void web_send_event(const char* event_name, String& event_data) {
+  events.send(event_data.c_str(), event_name);
 }

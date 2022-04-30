@@ -32,3 +32,14 @@ void set_servo_angle(int servo_num, int angle) {
 int get_servo_angle(int servo_num) {
   return servos[servo_num]->read();
 }
+
+String get_servo_angles_as_json() {
+    StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
+    JsonArray angles = doc.to<JsonArray>();
+    for (int i = 0; i < num_servos; ++i) {
+      angles.add(get_servo_angle(i));
+    }
+    String response;
+    serializeJson(doc, response);
+    return response;  
+}
