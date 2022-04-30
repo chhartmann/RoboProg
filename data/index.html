@@ -74,18 +74,18 @@ margin-left: 100px; /* Same as the width of the sidenav */
         <button id="btn-a3-dec" type="button" class="btn btn-outline-primary">A3 -</button>
         <button id="btn-a4-dec" type="button" class="btn btn-outline-primary">Gripper Close</button>
       </div>
-    <div class="btn-group-vertical">
-        <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">A1 +</button>
-        <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">A2 +</button>
-        <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">A3 +</button>
-        <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">Gripper Open</button>
-      </div> 
       <div class="btn-group-vertical">
         <button id="pos-a1" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
         <button id="pos-a2" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
         <button id="pos-a3" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
         <button id="pos-a4" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
       </div>
+    <div class="btn-group-vertical">
+        <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">A1 +</button>
+        <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">A2 +</button>
+        <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">A3 +</button>
+        <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">Gripper Open</button>
+      </div> 
       <div class="row" style="height:20px;"></div>
     </div>
     
@@ -99,7 +99,8 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <button id="btn-stop-lua" type="button" class="btn-label btn btn-outline-primary">Stop</button>
     <button id="btn-save-lua" type="button" class="btn-label btn btn-outline-primary">Save</button>
     <button id="btn-touchup-lua" type="button" class="btn-label btn btn-outline-primary">MoveTo</button>
-    <button id="btn-reset-lua" type="button" class="btn-label btn btn-outline-primary">Reset</button>
+    <button id="btn-reload-lua" type="button" class="btn-label btn btn-outline-primary">Reload</button>
+    <button id="btn-clear-lua" type="button" class="btn-label btn btn-outline-primary">Clear</button>
     <div class="row" style="height:20px;"></div>
     </div>
 </div>
@@ -229,10 +230,25 @@ margin-left: 100px; /* Same as the width of the sidenav */
         });
     });
 
-    $('#btn-reset-lua').click(function(){
+    $('#btn-reload-lua').click(function(){
         $.get("/rest/read_script", function(data) {
             $("#luaScriptTextarea").val(data);
         });
+    });
+
+    $('#btn-clear-lua').click(function(){
+        $("#luaScriptTextarea").val("");
+    });
+
+    $('#btn-touchup-lua').click(function(){
+        console.log("touchup");
+        var pos = get_joint_angles_from_display();
+        var lua_script = $("#luaScriptTextarea").val();
+        var cursorPos = $('#luaScriptTextarea').prop('selectionStart');
+        var textBefore = lua_script.substring(0,  cursorPos);
+        var textAfter  = lua_script.substring(cursorPos, lua_script.length);
+        var newScript = textBefore + "setJointAngles(" + pos[0] + "," + pos[1] + "," + pos[2] + "," + pos[3] + ")\n" + textAfter;
+        $('#luaScriptTextarea').val(newScript);
     });
 
     // **************
