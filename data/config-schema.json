@@ -29,20 +29,20 @@
       },
       "Wifi-SSID": {
         "type": "string",
-        "description": "WiFi SSID",
+        "description": "WiFi SSID"
       },
       "Wifi-Password": {
         "type": "string",
-        "description": "WiFi Password",
+        "description": "WiFi Password"
       },
       "Hostname": {
         "type": "string",
-        "description": "Hostname of the RobotProg controller",
+        "description": "Hostname of the RobotProg controller"
       },
       "ROS-Agent-IP": {
         "type": "string",
         "description": "IP of the ROS Agent",
-        "pattern" : "([0-9]{1,3}\.){3}[0-9]{1,3}"
+        "pattern" : "(([0-9]{1,3}\\.){3}[0-9]{1,3})|(^$)"
       }
     },
     "required": [

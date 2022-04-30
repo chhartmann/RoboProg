@@ -8,8 +8,13 @@
 #include <web_interface.h>
 #include <script_interface.h>
 #include <servo_handler.h>
+#include <config.h>
 
-void setupOta() {
+#if __has_include("wifi_secrets.h")
+#include "wifi_secrets.h"
+#endif
+
+void setupOta(const char* hostname) {
   ArduinoOTA
     .onStart([]() {
       String type;
@@ -35,6 +40,7 @@ void setupOta() {
       else if (error == OTA_END_ERROR) Serial.println("End Failed");
     });
 
+  ArduinoOTA.setHostname(hostname);
   ArduinoOTA.begin();
 }
 
@@ -46,36 +52,36 @@ void setup() {
       while(1);
    }
 
-  WiFi.mode(WIFI_STA);
-
   // load config from file
-  DynamicJsonDocument configDoc(256);
+  ConfigJsonDoc configDoc;
   File configFile = SPIFFS.open("/config.json", "r");
   DeserializationError jsonError = deserializeJson(configDoc, configFile);
   configFile.close();
   if (jsonError) {
-    Serial.println("deserializeJson() failed for config file");
+    Serial.printf("deserializeJson() failed (%s) for config file\n", jsonError.c_str());
+    serializeJsonPretty(configDoc, Serial);
+    while(1);
   }
-  JsonObject configObj = configDoc.to<JsonObject>();
-
 
 #if defined(MY_WIFY_SSID) && defined(MY_WIFY_PASS)
-    if (configObj["Wifi-SSID"] == "") {
-      configObj["Wifi-SSID"] = MY_WIFY_SSID;
-      configObj["Wifi-Password"] = MY_WIFY_PASS;
+    if (configDoc[wifi_ssid_key] == "") {
+      configDoc[wifi_ssid_key] = MY_WIFY_SSID;
+      configDoc[wifi_pwd_key] = MY_WIFY_PASS;
     }
 #endif
 
-  if (configObj["Wifi-SSID"] == "") {
+  WiFi.setHostname(configDoc[wifi_hostname_key]);
+
+  if (configDoc[wifi_ssid_key] == "") {
     WiFi.softAP("RobotProg");
   } else {
-    // WiFi.begin(MY_WIFY_SSID, MY_WIFY_PASS) is implicitly done by ros_setup()
-    ros_setup(configObj);
+    // Wifi is startet in ros_setup()
+    ros_setup(configDoc);
   }
 
   web_setup();
-  setupOta();
-  servo_setup(configObj);
+  setupOta(configDoc[wifi_hostname_key]);
+  servo_setup(configDoc);
   script_setup();
 }
 

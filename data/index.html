@@ -67,17 +67,17 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <div class="row" style="height:10px;"></div>
     <button id="btn-home" type="button" class="btn-label btn btn-outline-primary">Home</button>
     <div class="btn-group-vertical">
-        <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">A1 +</button>
-        <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">A2 +</button>
-        <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">A3 +</button>
-        <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">Gripper Open</button>
-      </div> 
-      <div class="btn-group-vertical">
         <button id="btn-a1-dec" type="button" class="btn btn-outline-primary">A1 -</button>
         <button id="btn-a2-dec" type="button" class="btn btn-outline-primary">A2 -</button>
         <button id="btn-a3-dec" type="button" class="btn btn-outline-primary">A3 -</button>
         <button id="btn-a4-dec" type="button" class="btn btn-outline-primary">Gripper Close</button>
       </div>
+    <div class="btn-group-vertical">
+        <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">A1 +</button>
+        <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">A2 +</button>
+        <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">A3 +</button>
+        <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">Gripper Open</button>
+      </div> 
       <div class="btn-group-vertical">
         <button id="pos-a1" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
         <button id="pos-a2" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
@@ -158,7 +158,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
         });
 
         $.get("/rest/read_schema", function(data) {
-            configEditor.setSchema(data);
+            configEditor.setSchema(JSON.parse(data));
         });
     });
 
@@ -220,11 +220,9 @@ margin-left: 100px; /* Same as the width of the sidenav */
     });
 
     $('#btn-restart').click(function(){
-        $.ajax({
-        type: "POST",
-        url: "/rest/restart",
-        data: "restart",
-        contentType: 'text/plain'});
+        $.get("/rest/restart", function(data) {
+            console.log(data);
+        });
     });
 
 </script>

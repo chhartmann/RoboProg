@@ -1,4 +1,3 @@
-#include <ArduinoJson.h>
 #include <ros_interface.h>
 #include <micro_ros_arduino.h>
 #include <stdio.h>
@@ -6,11 +5,6 @@
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <std_msgs/msg/int32_multi_array.h>
-
-#if __has_include("wifi_secrets.h")
-#include "wifi_secrets.h"
-#endif
-
 #include <servo_handler.h>
 
 #define RCCHECK(fn) { if (!ros_connection_failed) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.printf("ROS failed in line %i with error code %i\n", __LINE__, temp_rc); ros_connection_failed = true;}} }
@@ -33,15 +27,19 @@ void subscription_callback(const void * msgin)
   }
 }
 
-void ros_setup(JsonObject const config) {
-    if (!config.containsKey("ROS-Agent-IP")) {
-      Serial.println("ROS-Agent-IP not found in config file");
+void ros_setup(ConfigJsonDoc& config) {
+    const char* ros_ip = config[ros_agent_ip_key];
+    const char* ssid = config[wifi_ssid_key];
+    const char* pwd = config[wifi_pwd_key];
+
+    if (config[ros_agent_ip_key] == "") {
+      Serial.println("ROS-Agent-IP not configured");
+      ros_connection_failed = true;
+
+      // start wifi without ROS
+      WiFi.begin(ssid, pwd);
       return;
     }
-
-    const char* ros_ip = config["ROS-Agent-IP"];
-    const char* ssid = config["Wifi-SSID"];
-    const char* pwd = config["Wifi-Password"];
     
     set_microros_wifi_transports((char*)ssid, (char*)pwd, (char*)ros_ip, 8888);
 

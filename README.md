@@ -24,7 +24,6 @@ http://www.eezyrobots.it/eba_mk1.html
 * /rest/set_joint_angles / HTTP_POST / application/json
 * curl -X POST http://esp32-0bebbc/rest/set_joint_angles -H 'Content-Type: application/json' -d '[10,20,30,40]'
 
-
 # Lua functions
 * setJointAngles(int, int, int, int)
 * pinMode(int)

@@ -70,6 +70,7 @@ void web_setup() {
 
     server.on("/rest/restart", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200);
+      Serial.println("Restarting...");
       ESP.restart();
     });
 

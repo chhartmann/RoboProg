@@ -12,17 +12,11 @@ static const int servo_pins[num_servos] = {15, 16, 14, 4};
 static int servo_min_angle[num_servos] = {0, 0, 0, 0};
 static int servo_max_angle[num_servos] = {180, 180, 180, 180};
 
-void servo_setup(JsonObject const config) {
+void servo_setup(ConfigJsonDoc& config) {
   for (int i = 0; i < num_servos; i++) {
     servos[i]->attach(servo_pins[i]);
-
-    if (config.containsKey("limits")) {
-      servo_min_angle[i] = config["limits"][i]["min"];
-    }
-
-    if (config.containsKey("servo_max_angle")) {
-      servo_max_angle[i] = config["limits"][i]["max"];
-    }
+    servo_min_angle[i] = config["limits"][i]["min"];
+    servo_max_angle[i] = config["limits"][i]["max"];
   }
 }
 
