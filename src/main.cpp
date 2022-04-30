@@ -83,10 +83,16 @@ void setup() {
   setupOta(configDoc[wifi_hostname_key]);
   servo_setup(configDoc);
   script_setup();
+
+  if (configDoc[autostart_script_key] == true) {
+    File scriptFile = SPIFFS.open("/script.lua", "r");
+    String script = scriptFile.readString();
+    scriptFile.close();
+    script_run(script.c_str());
+  }
 }
 
 void loop() {
-
     ArduinoOTA.handle();
     ros_loop();
 }

@@ -14,7 +14,7 @@ void luaTaskFunc(void * parameter){
   vTaskDelete(NULL);
 }
 
-void script_run(char* data) {
+void script_run(const char* data) {
   script_stop();
   luaScript = data;
   luaScript += "\n";
