@@ -90,9 +90,10 @@ margin-left: 100px; /* Same as the width of the sidenav */
         <label for="luaScriptTextarea" class="form-label">Robo Script</label>
         <textarea class="form-control" id="luaScriptTextarea" rows="10"></textarea>
       </div>
-      <div id="lua-status" class="alert alert-primary" role="alert">Status</div>
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
+    <button id="btn-stop-lua" type="button" class="btn-label btn btn-outline-primary">Stop</button>
     <button id="btn-save-lua" type="button" class="btn-label btn btn-outline-primary">Save</button>
+    <button id="btn-reset-lua" type="button" class="btn-label btn btn-outline-primary">Reset</button>
 </div>
 <div id="main_settings" style="display: none" class="main">
     <div id="jsoneditor"></div>
@@ -174,6 +175,10 @@ margin-left: 100px; /* Same as the width of the sidenav */
         }
     });
 
+    // **************
+    // manual control
+    // **************
+
     $('[id^="btn-a"]').click(function(){
         var id = $(this).attr('id');
         var axis = parseInt(id.match(/\d/)[0]);
@@ -188,15 +193,22 @@ margin-left: 100px; /* Same as the width of the sidenav */
         set_joint_angles_on_controller(pos);
     });
 
+    // **************
+    // lua script
+    // **************
+
     $('#btn-run-lua').click(function(){
-        $('#lua-status').text("Running");
         $.ajax({
         type: "POST",
         url: "/rest/run_script",
         data: $("#luaScriptTextarea").val(),
-        contentType: 'text/plain',
-        success: function(data) {
-            $('#lua-status').text(data.length > 0 ? data : "Finished "); }
+        contentType: 'text/plain'
+        });
+    });
+
+    $('#btn-stop-lua').click(function(){
+        $.get("/rest/stop_script", function(data) {
+            console.log(data);
         });
     });
 
@@ -205,11 +217,19 @@ margin-left: 100px; /* Same as the width of the sidenav */
         type: "POST",
         url: "/rest/save_script",
         data: $("#luaScriptTextarea").val(),
-        contentType: 'text/plain',
-        success: function(data) {
-            $('#lua-status').text("Saved"); }
+        contentType: 'text/plain'
         });
     });
+
+    $('#btn-reset-lua').click(function(){
+        $.get("/rest/read_script", function(data) {
+            $("#luaScriptTextarea").val(data);
+        });
+    });
+
+    // **************
+    // settings
+    // **************
 
     $('#btn-save-config').click(function(){
         $.ajax({

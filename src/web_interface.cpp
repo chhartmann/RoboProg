@@ -26,11 +26,14 @@ void web_setup() {
         NULL,
         [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
     
-        String script = (char*)data;
-        String result = lua.Lua_dostring(&script);
-        Serial.println("Script finished.");
-        request->send(200, "text/plain", result);
+        script_run((char*)data);
+        request->send(200);
       });
+
+    server.on("/rest/stop_script", HTTP_GET, [](AsyncWebServerRequest *request) {
+      script_stop();
+      request->send(200);
+    });
 
     server.on("/rest/save_script", HTTP_POST, [](AsyncWebServerRequest * request){},
         NULL,

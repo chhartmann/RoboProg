@@ -2,6 +2,33 @@
 #include <servo_handler.h>
 
 LuaWrapper lua;
+TaskHandle_t luaTaskHandle = NULL;
+String luaScript;
+
+void luaTaskFunc(void * parameter){
+  Serial.println("Lua task started");
+  String result = lua.Lua_dostring(&luaScript);  
+  Serial.println("Lua task finished");
+  Serial.println(result);
+  luaTaskHandle = NULL;
+  vTaskDelete(NULL);
+}
+
+void script_run(char* data) {
+  script_stop();
+  luaScript = data;
+  luaScript += "\n";
+  xTaskCreate(luaTaskFunc, "Lua Task", 8000, NULL, 1, &luaTaskHandle);
+}
+
+void script_stop() {
+  if (luaTaskHandle != NULL) {
+    vTaskDelete(luaTaskHandle);
+    luaTaskHandle = NULL;
+    Serial.println("Lua task deleted");
+  }  
+}
+
 
 static int lua_set_joint_angles(lua_State *lua_state) {
   for (int i = 0; i < num_servos; ++i) {
@@ -44,3 +71,4 @@ void script_setup() {
   lua.Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
   lua.Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
 }
+
