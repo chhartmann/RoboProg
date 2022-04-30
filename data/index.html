@@ -57,14 +57,16 @@ margin-left: 100px; /* Same as the width of the sidenav */
 <body>
 <div class="sidenav d-flex flex-column flex-shrink-0 bg-light vh-100" style="width: 100px;">
     <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
-        <li> <a href="#" id="manual" class="nav-link py-3 border-bottom active"> <i class="fa fa-gamepad"></i> <small>Manual Control</small> </a> </li>
-        <li> <a href="#" id="script" class="nav-link py-3 border-bottom"> <i class="fa fa-file"></i> <small>Robo Script</small> </a> </li>
+        <li> <a href="#" id="control" class="nav-link py-3 border-bottom active"> <i class="fa fa-gamepad"></i> <small>Control</small> </a> </li>
         <li> <a href="#" id="settings" class="nav-link py-3 border-bottom"> <i class="fa fa-cog"></i> <small>Settings</small> </a> </li>
         <li> <a href="#" id="diagnosis" class="nav-link py-3 border-bottom"> <i class="fa fa-stethoscope"></i> <small>Diagnosis</small> </a> </li>
     </ul>
 </div>
-<div id="main_manual" class="main">
-    <div class="row" style="height:10px;"></div>
+<div id="main_control" class="main">
+    <div class="row" style="height:20px;"></div>
+    <div class="container border border-primary rounded">
+        <label class="form-label">Manual Control</label>
+        <div class="row" style="height:10px;"></div>
     <button id="btn-home" type="button" class="btn-label btn btn-outline-primary">Home</button>
     <div class="btn-group-vertical">
         <button id="btn-a1-dec" type="button" class="btn btn-outline-primary">A1 -</button>
@@ -84,16 +86,22 @@ margin-left: 100px; /* Same as the width of the sidenav */
         <button id="pos-a3" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
         <button id="pos-a4" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
       </div>
-</div>
-<div id="main_script" style="display: none" class="main">
-    <div class="mb-3">
+      <div class="row" style="height:20px;"></div>
+    </div>
+    
+    <div class="row" style="height:20px;"></div>
+    <div class="container border border-primary rounded">
+        <div class="mb-3">
         <label for="luaScriptTextarea" class="form-label">Robo Script</label>
         <textarea class="form-control" id="luaScriptTextarea" rows="10"></textarea>
       </div>
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
     <button id="btn-stop-lua" type="button" class="btn-label btn btn-outline-primary">Stop</button>
     <button id="btn-save-lua" type="button" class="btn-label btn btn-outline-primary">Save</button>
+    <button id="btn-touchup-lua" type="button" class="btn-label btn btn-outline-primary">MoveTo</button>
     <button id="btn-reset-lua" type="button" class="btn-label btn btn-outline-primary">Reset</button>
+    <div class="row" style="height:20px;"></div>
+    </div>
 </div>
 <div id="main_settings" style="display: none" class="main">
     <div id="jsoneditor"></div>
@@ -170,7 +178,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
         $(".main").hide();
         $("#main_" + id).show();
 
-        if (id == "manual") {
+        if (id == "control") {
             get_joint_angles_from_controller();
         }
     });
