@@ -80,7 +80,7 @@ void web_setup() {
     server.on("/rest/read_diagnosis", HTTP_GET, [](AsyncWebServerRequest *request) {
       StaticJsonDocument<512> doc;
       doc["CPU Freq MHz"] = ESP.getCpuFreqMHz();
-      doc["Chip MOdel"] = ESP.getChipModel();
+      doc["Chip Model"] = ESP.getChipModel();
       doc["Flash Chip Size"] = ESP.getFlashChipSize();
       doc["Heap Size"] = ESP.getHeapSize();
       doc["Free Heap"] = ESP.getFreeHeap();

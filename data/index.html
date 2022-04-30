@@ -114,7 +114,6 @@ margin-left: 100px; /* Same as the width of the sidenav */
 
 <div id="main_diagnosis" style="display: none" class="main">
     <div class="row" style="height:10px;"></div>
-    <label class="form-label">Diagnosis Info</label>
     <div id="diagnosis_content"></div>
 </div>
 
@@ -192,10 +191,11 @@ margin-left: 100px; /* Same as the width of the sidenav */
 
         if (id == "diagnosis") {            
             $.getJSON("/rest/read_diagnosis", function(obj) {
-                var html = "";
+                var html = "<table class='table table-striped'><tbody>";
                 for(var key in obj) {
-                    html += key + ": " + obj[key] + "<br>";
+                    html += "<tr><td>" + key + "</td><td>" + obj[key] + "</td></tr>";
                 }
+                html += "</tbody></table>";
                 $("#diagnosis_content").html(html);
             });            
         }
