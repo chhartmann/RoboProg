@@ -17,7 +17,7 @@ void luaTaskFunc(void * parameter){
 void script_run(const char* data) {
   script_stop();
   luaScript = data;
-  luaScript += "\n";
+  Serial.println(data);
   xTaskCreate(luaTaskFunc, "Lua Task", 8000, NULL, 1, &luaTaskHandle);
 }
 
@@ -64,11 +64,18 @@ static int lua_wrapper_delay(lua_State *lua_state) {
   return 0;
 }
 
+static int lua_log_serial(lua_State *lua_state) {
+  const char* a = luaL_checkstring(lua_state, 1);
+  Serial.print(a);
+  return 0;
+}
+
 void script_setup() {
   lua.Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
   lua.Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
   lua.Lua_register("digitalWrite", (const lua_CFunction) &lua_wrapper_digitalWrite);
   lua.Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
   lua.Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
+  lua.Lua_register("logSerial", (const lua_CFunction) &lua_log_serial);
 }
 

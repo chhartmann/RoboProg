@@ -210,7 +210,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
         $.ajax({
         type: "POST",
         url: "/rest/run_script",
-        data: $("#luaScriptTextarea").val(),
+        data: $("#luaScriptTextarea").val() + "\n",
         contentType: 'text/plain'
         });
     });
