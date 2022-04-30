@@ -77,6 +77,32 @@ void web_setup() {
       ESP.restart();
     });
 
+    server.on("/rest/read_diagnosis", HTTP_GET, [](AsyncWebServerRequest *request) {
+      StaticJsonDocument<512> doc;
+      doc["CPU Freq MHz"] = ESP.getCpuFreqMHz();
+      doc["Chip MOdel"] = ESP.getChipModel();
+      doc["Flash Chip Size"] = ESP.getFlashChipSize();
+      doc["Heap Size"] = ESP.getHeapSize();
+      doc["Free Heap"] = ESP.getFreeHeap();
+      doc["Min Free Heap"] = ESP.getMinFreeHeap();
+
+      // Spiffs
+      doc["Spiffs Total Bytes"] = SPIFFS.totalBytes();
+      doc["Spiffs Used Bytes"] = SPIFFS.usedBytes();
+
+      // Free Rtos
+      // TaskStatus_t pxTaskStatus;
+      // vTaskGetInfo(NULL, &pxTaskStatus, pdTRUE, eInvalid);
+      // doc["Task Name"] = pxTaskStatus.pcTaskName;
+      // doc["Task Stack Size"] = pxTaskStatus.usStackHighWaterMark;
+
+      String response;
+      serializeJson(doc, response);
+//      Serial.println(response);
+      request->send(200, "application/json", response);
+    });
+
+
     server.on("/rest/get_joint_angles", HTTP_GET, [] (AsyncWebServerRequest *request) {
       StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
       JsonArray angles = doc.to<JsonArray>();
