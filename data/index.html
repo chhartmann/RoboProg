@@ -52,6 +52,12 @@ margin-left: 100px; /* Same as the width of the sidenav */
     width: 78px !important;    
 }
 
+.lua-code {
+    font-size: 12px;
+    font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
+    line-height: 1.2;
+}
+
 </style>
     </head>
 <body>
@@ -93,7 +99,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <div class="container border border-primary rounded">
         <div class="mb-3">
         <label for="luaScriptTextarea" class="form-label">Robo Script</label>
-        <textarea class="form-control" id="luaScriptTextarea" rows="10"></textarea>
+        <textarea class="form-control lua-code" id="luaScriptTextarea" rows="10"></textarea>
       </div>
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
     <button id="btn-stop-lua" type="button" class="btn-label btn btn-outline-primary">Stop</button>
@@ -102,7 +108,10 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <button id="btn-reload-lua" type="button" class="btn-label btn btn-outline-primary">Reload</button>
     <button id="btn-clear-lua" type="button" class="btn-label btn btn-outline-primary">Clear</button>
     <div class="row" style="height:20px;"></div>
-    </div>
+    <label for="luaScriptOutput" class="form-label">Robo Script Output</label>
+    <textarea class="form-control lua-code" id="luaScriptOutput" rows="7" readonly></textarea>
+    <div class="row" style="height:20px;"></div>
+</div>
 </div>
 
 <div id="main_settings" style="display: none" class="main">
@@ -134,6 +143,14 @@ margin-left: 100px; /* Same as the width of the sidenav */
     source.addEventListener('servo_pos', function (e) {
 //        console.log("event received: " + e.data);
         set_joint_angles_on_display(JSON.parse(e.data));
+    }, false);
+
+    source.addEventListener('lua_output', function (e) {
+//        console.log("event received: " + e.data);
+        var output = $("#luaScriptOutput").val();
+        output += e.data + "\n";
+        $("#luaScriptOutput").val(output);
+        $("#luaScriptOutput")[0].scrollTop = $("#luaScriptOutput")[0].scrollHeight;
     }, false);
 
     function get_joint_angles_from_display() {
@@ -227,6 +244,9 @@ margin-left: 100px; /* Same as the width of the sidenav */
     // **************
 
     $('#btn-run-lua').click(function(){
+        // clear the output window
+        $("#luaScriptOutput").val("");
+
         $.ajax({
         type: "POST",
         url: "/rest/run_script",
@@ -251,12 +271,16 @@ margin-left: 100px; /* Same as the width of the sidenav */
     });
 
     $('#btn-reload-lua').click(function(){
+        // clear output window when reloading lua code in code window
+        $("#luaScriptOutput").val("");
+
         $.get("/rest/read_script", function(data) {
             $("#luaScriptTextarea").val(data);
         });
     });
 
     $('#btn-clear-lua').click(function(){
+        $("#luaScriptOutput").val("");
         $("#luaScriptTextarea").val("");
     });
 

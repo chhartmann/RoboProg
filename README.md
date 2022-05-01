@@ -30,6 +30,7 @@ http://www.eezyrobots.it/eba_mk1.html
 * digitalRead(int)
 * delay(int)
 * logSerial(char*)
+* logWeb(char*)
 
 # ROS2 commands
 * Start micro-ROS agent: docker run -it --rm --net=host microros/micro-ros-agent:galactic udp4 --port 8888 -v6

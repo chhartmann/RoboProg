@@ -139,3 +139,7 @@ void web_setup() {
 void web_send_event(const char* event_name, String& event_data) {
   events.send(event_data.c_str(), event_name);
 }
+
+void web_send_event(const char* event_name, const char* event_data) {
+  events.send(event_data, event_name);
+}
