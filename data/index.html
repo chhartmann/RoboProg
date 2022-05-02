@@ -163,7 +163,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     }, false);
 
     function upload(filename, content) {
-    var formData = new FormData();
+        var formData = new FormData();
         var blob = new Blob([content], {type: "text/plain"});
         formData.append("file", blob, filename);
         $.ajax({
@@ -274,12 +274,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
         // clear the output window
         $("#luaScriptOutput").val("");
 
-        $.ajax({
-        type: "POST",
-        url: "/rest/run_script",
-        data: luaEditor.getValue(),
-        contentType: 'text/plain'
-        });
+        upload("run_script", luaEditor.getValue());
     });
 
     $('#btn-stop-lua').click(function(){

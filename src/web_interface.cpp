@@ -16,27 +16,36 @@ const char* config_file_name = "/config.json";
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
   Serial.println(logmessage);
+  String file;
 
   if (!index) {
     logmessage = "Upload Start: " + String(filename);
-    // open the file on first call and store the file handle in the request object
-    request->_tempFile = SPIFFS.open("/" + filename, "w");
     Serial.println(logmessage);
+    script_stop(); // just be sure - might be running from string buffer
+    file = "";
   }
 
   if (len) {
-    // stream the incoming chunk to the opened file
-    request->_tempFile.write(data, len);
     logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
     Serial.println(logmessage);
+    for (size_t i = 0; i < len; i++) {
+      file += (char)data[i];
+    }
   }
 
   if (final) {
     logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
-    // close the file handle as the upload is now done
-    request->_tempFile.close();
     Serial.println(logmessage);
-    request->redirect("/");
+
+    if (filename == "run_script") {
+      script_run(file.c_str());
+    } else {
+      File spiffs = SPIFFS.open("/" + filename, "w");
+      spiffs.write((const uint8_t*)file.c_str(), file.length());
+      spiffs.close();
+    }
+//    request->redirect("/");
+    request->send(200);
   }
 }
 
@@ -48,31 +57,6 @@ void web_setup() {
     server.on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
           request->send(200);
         }, handleUpload);
-
-    server.on(
-        "/rest/run_script",
-        HTTP_POST,
-        [](AsyncWebServerRequest * request){},
-        NULL,
-        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
-        
-        static String string;
-
-        if(!index){
-            Serial.printf("BodyStart: %u B\n", total);
-            script_stop();
-            string = "";
-        }
-        for(size_t i=0; i<len; i++){
-          string += (char)data[i];
-        }
-        if(index + len == total){
-          Serial.printf("BodyEnd: %u B\n", total);
-          script_run(string.c_str());
-          request->send(200);
-        }
-
-      });
 
     server.on("/rest/stop_script", HTTP_GET, [](AsyncWebServerRequest *request) {
       script_stop();
