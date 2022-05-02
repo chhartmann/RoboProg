@@ -7,6 +7,8 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.min.js" integrity="sha512-KQaWlVsZF0iPXCR8p176hVrg/rlw+smy8dpJ+vwiuvoHyGr8PTVvaAV4ZmsAYdCvMRP8e3sB9pl1mRuaunaXrg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.7.4/jsoneditor.css" integrity="sha512-XmjnlPNi5tkrcqMGEG7ZOpGhny9t8fdCk0oxZxjFaqF3cl3UKv+51GgeUoY3Rf/ZaGtBvMZ9dDhceGZ1hcOyMw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.min.js" integrity="sha512-hDyKEpCc9jPn3u2VffFjScCtNqZI+BAbThAhhDYqqqZbxMqmTSNIgdU0OU9BRD/8wFxHIWLAo561hh9fW7j6sA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
 body {
     background-color: #eee
@@ -52,7 +54,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     width: 78px !important;    
 }
 
-.lua-code {
+.lua-output {
     font-size: 12px;
     font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
     line-height: 1.2;
@@ -98,9 +100,10 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <div class="row" style="height:20px;"></div>
     <div class="container border border-primary rounded">
         <div class="mb-3">
-        <label for="luaScriptTextarea" class="form-label">Robo Script</label>
-        <textarea class="form-control lua-code" id="luaScriptTextarea" rows="10"></textarea>
-      </div>
+        <label for="luaScriptEditor" class="form-label">Robo Script</label>
+        <pre id="luaScriptEditor" style="height: 203px;" class="ace_editor ace-tm" draggable="false">
+            <div style="position: absolute;"></div>
+    </div>
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
     <button id="btn-stop-lua" type="button" class="btn-label btn btn-outline-primary">Stop</button>
     <button id="btn-save-lua" type="button" class="btn-label btn btn-outline-primary">Save</button>
@@ -109,7 +112,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <button id="btn-clear-lua" type="button" class="btn-label btn btn-outline-primary">Clear</button>
     <div class="row" style="height:20px;"></div>
     <label for="luaScriptOutput" class="form-label">Robo Script Output</label>
-    <textarea class="form-control lua-code" id="luaScriptOutput" rows="7" readonly></textarea>
+    <textarea class="form-control lua-output" id="luaScriptOutput" rows="7" readonly></textarea>
     <div class="row" style="height:20px;"></div>
 </div>
 </div>
@@ -138,6 +141,12 @@ margin-left: 100px; /* Same as the width of the sidenav */
         }
     };
     const configEditor = new JSONEditor(document.getElementById('jsoneditor'), options);
+
+    ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14");
+    var luaEditor = ace.edit("luaScriptEditor");
+    luaEditor.setTheme("ace/theme/monokai");
+    luaEditor.session.setMode("ace/mode/lua"); 
+
     var source = new EventSource('/events');
 
     source.addEventListener('servo_pos', function (e) {
@@ -152,6 +161,23 @@ margin-left: 100px; /* Same as the width of the sidenav */
         $("#luaScriptOutput").val(output);
         $("#luaScriptOutput")[0].scrollTop = $("#luaScriptOutput")[0].scrollHeight;
     }, false);
+
+    function upload(filename, content) {
+    var formData = new FormData();
+        var blob = new Blob([content], {type: "text/plain"});
+        formData.append("file", blob, filename);
+        $.ajax({
+            url: "/upload",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            enctype: 'multipart/form-data',
+            success: function(data) {
+                console.log("upload finished");
+            }
+        });
+    }
 
     function get_joint_angles_from_display() {
         var pos = [];
@@ -185,16 +211,17 @@ margin-left: 100px; /* Same as the width of the sidenav */
 
     $(document).ready(function(){
         get_joint_angles_from_controller();
-        $.get("/rest/read_script", function(data) {
-            $("#luaScriptTextarea").val(data);
+
+        $.get("/script.lua", function(data) {
+            luaEditor.setValue(data);
         });
 
-        $.get("/rest/read_config", function(data) {
-            configEditor.setText(data);
+        $.get("/config.json", function(data) {
+            configEditor.setText(JSON.stringify(data));
         });
 
-        $.get("/rest/read_schema", function(data) {
-            configEditor.setSchema(JSON.parse(data));
+        $.get("/config-schema.json", function(data) {
+            configEditor.setSchema(data);
         });
     });
 
@@ -250,7 +277,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
         $.ajax({
         type: "POST",
         url: "/rest/run_script",
-        data: $("#luaScriptTextarea").val() + "\n",
+        data: luaEditor.getValue(),
         contentType: 'text/plain'
         });
     });
@@ -262,37 +289,28 @@ margin-left: 100px; /* Same as the width of the sidenav */
     });
 
     $('#btn-save-lua').click(function(){
-        $.ajax({
-        type: "POST",
-        url: "/rest/save_script",
-        data: $("#luaScriptTextarea").val(),
-        contentType: 'text/plain'
-        });
+        upload("script.lua", luaEditor.getValue());
     });
 
     $('#btn-reload-lua').click(function(){
         // clear output window when reloading lua code in code window
         $("#luaScriptOutput").val("");
 
-        $.get("/rest/read_script", function(data) {
-            $("#luaScriptTextarea").val(data);
+        $.get("/script.lua", function(data) {
+            luaEditor.setValue(data);
         });
     });
 
     $('#btn-clear-lua').click(function(){
         $("#luaScriptOutput").val("");
-        $("#luaScriptTextarea").val("");
+        luaEditor.setValue("");
     });
 
     $('#btn-touchup-lua').click(function(){
         console.log("touchup");
         var pos = get_joint_angles_from_display();
-        var lua_script = $("#luaScriptTextarea").val();
-        var cursorPos = $('#luaScriptTextarea').prop('selectionStart');
-        var textBefore = lua_script.substring(0,  cursorPos);
-        var textAfter  = lua_script.substring(cursorPos, lua_script.length);
-        var newScript = textBefore + "setJointAngles(" + pos[0] + "," + pos[1] + "," + pos[2] + "," + pos[3] + ")\n" + textAfter;
-        $('#luaScriptTextarea').val(newScript);
+        var text = "setJointAngles(" + pos[0] + "," + pos[1] + "," + pos[2] + "," + pos[3] + ")\n";
+        luaEditor.insert(text);
     });
 
     // **************
@@ -300,11 +318,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     // **************
 
     $('#btn-save-config').click(function(){
-        $.ajax({
-        type: "POST",
-        url: "/rest/save_config",
-        data: configEditor.getText(),
-        contentType: 'text/plain'});
+        upload("config.json", configEditor.getText());
     });
 
     $('#btn-restart').click(function(){

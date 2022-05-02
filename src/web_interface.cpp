@@ -13,65 +13,71 @@ AsyncEventSource events("/events");
 const char* robo_script_name = "/script.lua";
 const char* config_file_name = "/config.json";
 
+void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+  String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
+  Serial.println(logmessage);
+
+  if (!index) {
+    logmessage = "Upload Start: " + String(filename);
+    // open the file on first call and store the file handle in the request object
+    request->_tempFile = SPIFFS.open("/" + filename, "w");
+    Serial.println(logmessage);
+  }
+
+  if (len) {
+    // stream the incoming chunk to the opened file
+    request->_tempFile.write(data, len);
+    logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
+    Serial.println(logmessage);
+  }
+
+  if (final) {
+    logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
+    // close the file handle as the upload is now done
+    request->_tempFile.close();
+    Serial.println(logmessage);
+    request->redirect("/");
+  }
+}
+
+
 void web_setup() {
-    // send html page from file
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SPIFFS, "/index.html", "text/html");
-    });
 
-    server.on("/test", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(200, "text/plain", "OK");
-    });
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
-    // REST API
-    server.on("/rest/run_script", HTTP_POST, [](AsyncWebServerRequest * request){},
+    server.on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
+          request->send(200);
+        }, handleUpload);
+
+    server.on(
+        "/rest/run_script",
+        HTTP_POST,
+        [](AsyncWebServerRequest * request){},
         NULL,
         [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
-    
-        script_run((char*)data);
-        request->send(200);
+        
+        static String string;
+
+        if(!index){
+            Serial.printf("BodyStart: %u B\n", total);
+            script_stop();
+            string = "";
+        }
+        for(size_t i=0; i<len; i++){
+          string += (char)data[i];
+        }
+        if(index + len == total){
+          Serial.printf("BodyEnd: %u B\n", total);
+          script_run(string.c_str());
+          request->send(200);
+        }
+
       });
 
     server.on("/rest/stop_script", HTTP_GET, [](AsyncWebServerRequest *request) {
       script_stop();
       request->send(200);
     });
-
-    server.on("/rest/save_script", HTTP_POST, [](AsyncWebServerRequest * request){},
-        NULL,
-        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
-    
-        String script = (char*)data;
-        File f = SPIFFS.open(robo_script_name, "w");
-        f.print(script);
-        f.close();
-
-        request->send(200);
-      });
-
-    server.on("/rest/read_script", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SPIFFS, robo_script_name, "text/plain");
-    });
-
-    server.on("/rest/read_config", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SPIFFS, config_file_name, "text/plain");
-    });
-
-    server.on("/rest/read_schema", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SPIFFS, "/config-schema.json", "text/plain");
-    });
-
-    server.on("/rest/save_config", HTTP_POST, [](AsyncWebServerRequest * request){},
-        NULL,
-        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
-    
-        String script = (char*)data;
-        File f = SPIFFS.open(config_file_name, "w");
-        f.print(script);
-        f.close();
-
-        request->send(200);
-      });
 
     server.on("/rest/restart", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(200);
