@@ -18,6 +18,9 @@ http://www.eezyrobots.it/eba_mk1.html
 * Servos controlled at pins 15, 16, 14, 4
 * When SSID is not configured, WIFI access point is started (ROS interface is not working in AP mode)
 
+# How to build
+* [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chhartmann/RoboProg)
+
 # REST API
 * /rest/get_joint_angles / HTTP_GET / application/json
 * /rest/set_joint_angles / HTTP_POST / application/json
