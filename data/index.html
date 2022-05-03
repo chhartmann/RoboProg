@@ -262,7 +262,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     });
 
     $('#btn-home').click(function(){
-        var pos = [90,90,90,90];
+        var pos = configEditor.get()["home"];
         set_joint_angles_on_controller(pos);
     });
 

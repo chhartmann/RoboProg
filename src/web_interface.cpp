@@ -10,9 +10,6 @@
 AsyncWebServer server(80);
 AsyncEventSource events("/events");
 
-const char* robo_script_name = "/script.lua";
-const char* config_file_name = "/config.json";
-
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
   Serial.println(logmessage);

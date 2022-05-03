@@ -27,6 +27,17 @@
           }
         ]
       },
+      "home": {
+        "type": "array",
+        "description": "Home position of the joints",
+        "items": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 180
+          }
+        ]
+      },
       "Autostart-Script": {
         "type": "boolean",
         "description": "Run script at startup"
