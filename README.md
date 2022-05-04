@@ -19,7 +19,10 @@ http://www.eezyrobots.it/eba_mk1.html
 * When SSID is not configured, WIFI access point is started (ROS interface is not working in AP mode)
 
 # How to build
-* [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chhartmann/RoboProg)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chhartmann/RoboProg)
+In gitpod compile firmware with "platformio run -e esp32dev" and build spiffs.bin with "platformio run --target buildfs --environment esp32dev". You can download the .bin files in the IDE under .pio/esp32dev and flash them with ESP32 flash tool (https://www.espressif.com/en/support/download/other-tools).
+
+or use vscode with platform.io plugin and use the defined platform.io project tasks to build and flash everything you need.
 
 # REST API
 * /rest/get_joint_angles / HTTP_GET / application/json
