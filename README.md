@@ -10,7 +10,6 @@ http://www.eezyrobots.it/eba_mk1.html
 
 # Status
 * Manual control: press and hold not yet implemented
-* No release binary available before configuration over web UI is implemented
 * ROS interface needs Agent (at startup) - not based on embeddedRTPS yet (see https://github.com/micro-ROS/micro_ros_espidf_component)
 * Not tested with robot yet
 
@@ -20,9 +19,12 @@ http://www.eezyrobots.it/eba_mk1.html
 
 # How to build
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chhartmann/RoboProg)
+
 In gitpod compile firmware with "platformio run -e esp32dev" and build spiffs.bin with "platformio run --target buildfs --environment esp32dev". You can download the .bin files in the IDE under .pio/esp32dev and flash them with ESP32 flash tool (https://www.espressif.com/en/support/download/other-tools).
 
-or use vscode with platform.io plugin and use the defined platform.io project tasks to build and flash everything you need.
+or 
+
+Use vscode with platform.io plugin and use the defined platform.io project tasks to build and flash everything you need.
 
 # REST API
 * /rest/get_joint_angles / HTTP_GET / application/json

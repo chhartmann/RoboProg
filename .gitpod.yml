@@ -1,6 +1,8 @@
 tasks:
   - before: platformio upgrade
-  - command: platformio run -e esp32dev
+  - command: | 
+    platformio run -e esp32dev
+    platformio run --target buildfs -e esp32dev 
 
 image:
   file: .gitpod.Dockerfile
