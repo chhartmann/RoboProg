@@ -1,3 +1,6 @@
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include <config.h>
 #include <script_interface.h>
 #include <servo_handler.h>
 #include <web_interface.h>
@@ -69,7 +72,7 @@ static int lua_wrapper_digitalRead(lua_State *lua_state) {
   int a = luaL_checkinteger(lua_state, 1);
   int val = digitalRead(a);
   lua_pushnumber(lua_state, val);
-  return 0;
+  return 1;
 }
 
 static int lua_wrapper_delay(lua_State *lua_state) {
@@ -91,6 +94,49 @@ static int lua_log_web(lua_State *lua_state) {
   return 0;
 }
 
+static void add_json_to_table(lua_State *lua_state, const char* key, JsonVariant& val) {
+  lua_pushstring(lua_state, key);
+  if (val.is<JsonArray>()) {
+    lua_newtable(lua_state);
+    int index = 1;
+    for (JsonVariant elem : val.as<JsonArray>()) {
+      add_json_to_table(lua_state, String(index++).c_str(), elem);
+    }
+  } else if (val.is<JsonObject>()) {
+    lua_newtable(lua_state);
+    for (JsonPair kv : val.as<JsonObject>()) {
+      const char* key = kv.key().c_str();
+      JsonVariant val = kv.value();
+      add_json_to_table(lua_state, key, val);
+    }
+  } else if (val.is<const char*>()) {
+    lua_pushstring(lua_state, val.as<const char*>());
+  } else if (val.is<int>()) {
+    lua_pushnumber(lua_state, val.as<int>());
+  } else if (val.is<bool>()) {
+    lua_pushboolean(lua_state, val.as<bool>());
+  } else {
+    Serial.println("Unknown type in config.json");
+  }
+  lua_settable(lua_state, -3);
+}
+
+static int lua_get_config(lua_State *lua_state) {
+  ConfigJsonDoc configDoc;
+  File configFile = SPIFFS.open("/config.json", "r");
+  deserializeJson(configDoc, configFile);
+  configFile.close();
+  JsonObject root = configDoc.as<JsonObject>();
+
+  lua_newtable(lua_state);
+  for (JsonPair kv : root) {
+    const char* key = kv.key().c_str();
+    JsonVariant val = kv.value();
+    add_json_to_table(lua_state, key, val);
+  }  
+  return 1;
+}
+
 void script_setup() {
   lua.Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
   lua.Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
@@ -99,5 +145,6 @@ void script_setup() {
   lua.Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
   lua.Lua_register("logSerial", (const lua_CFunction) &lua_log_serial);
   lua.Lua_register("logWeb", (const lua_CFunction) &lua_log_web);
+  lua.Lua_register("getConfig", (const lua_CFunction) &lua_get_config);
 }
 

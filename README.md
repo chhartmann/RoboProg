@@ -33,6 +33,7 @@ Use vscode with platform.io plugin and use the defined platform.io project tasks
 
 # Lua functions
 * setJointAngles(int, int, int, int)
+* getConfig() -- returns a table with the fields of the settings to access e.g. limits and home position
 * pinMode(int)
 * digitalWrite(int)
 * digitalRead(int)
