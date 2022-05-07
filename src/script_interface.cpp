@@ -9,6 +9,8 @@ LuaWrapper lua;
 TaskHandle_t luaTaskHandle = NULL;
 String luaScript;
 
+static void add_json_to_table(lua_State *lua_state, JsonVariant& val);
+
 void luaTaskFunc(void * parameter){
   Serial.println("Lua task started");
   web_send_event("lua_output", "Lua task started");
@@ -96,11 +98,22 @@ static int lua_log_web(lua_State *lua_state) {
 
 static void add_json_to_table(lua_State *lua_state, const char* key, JsonVariant& val) {
   lua_pushstring(lua_state, key);
+  add_json_to_table(lua_state, val);
+  lua_settable(lua_state, -3);
+}
+
+static void add_json_to_table(lua_State *lua_state, int key, JsonVariant& val) {
+  lua_pushnumber(lua_state, key);
+  add_json_to_table(lua_state, val);
+  lua_settable(lua_state, -3);
+}
+
+static void add_json_to_table(lua_State *lua_state, JsonVariant& val) {
   if (val.is<JsonArray>()) {
     lua_newtable(lua_state);
     int index = 1;
     for (JsonVariant elem : val.as<JsonArray>()) {
-      add_json_to_table(lua_state, String(index++).c_str(), elem);
+      add_json_to_table(lua_state, index++, elem);
     }
   } else if (val.is<JsonObject>()) {
     lua_newtable(lua_state);
@@ -118,7 +131,6 @@ static void add_json_to_table(lua_State *lua_state, const char* key, JsonVariant
   } else {
     Serial.println("Unknown type in config.json");
   }
-  lua_settable(lua_state, -3);
 }
 
 static int lua_get_config(lua_State *lua_state) {
@@ -126,14 +138,10 @@ static int lua_get_config(lua_State *lua_state) {
   File configFile = SPIFFS.open("/config.json", "r");
   deserializeJson(configDoc, configFile);
   configFile.close();
-  JsonObject root = configDoc.as<JsonObject>();
 
   lua_newtable(lua_state);
-  for (JsonPair kv : root) {
-    const char* key = kv.key().c_str();
-    JsonVariant val = kv.value();
-    add_json_to_table(lua_state, key, val);
-  }  
+  JsonVariant config = configDoc.as<JsonVariant>();
+  add_json_to_table(lua_state, config);
   return 1;
 }
 
