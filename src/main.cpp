@@ -110,5 +110,6 @@ void loop() {
     if (publish_joint_pos) {
       String joint_pos_json = get_joint_angles_as_json();
       web_send_event("joint_pos", joint_pos_json);
+      Serial.println("Web event: " + joint_pos_json);
     }
 }

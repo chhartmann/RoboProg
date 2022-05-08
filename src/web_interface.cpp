@@ -107,6 +107,7 @@ void web_setup() {
       }
       String response;
       serializeJson(data, response);
+      Serial.println("/rest/set_joint_angles: " + data.as<String>());
 //      Serial.println(response);
       request->send(200, "application/json", response);
     });
