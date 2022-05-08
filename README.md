@@ -8,13 +8,9 @@ A micro platform for controlling a robot arm via
 # Robot Arm
 http://www.eezyrobots.it/eba_mk1.html
 
-# Status
-* Manual control: press and hold not yet implemented
-* ROS interface needs Agent (at startup) - not based on embeddedRTPS yet (see https://github.com/micro-ROS/micro_ros_espidf_component)
-* Not tested with robot yet
-
 # How to use
 * Servos controlled at pins 15, 16, 14, 4
+* Configuration of direction, home position, offset between joint and servo position in settings tab
 * When SSID is not configured, WIFI access point is started (ROS interface is not working in AP mode)
 
 # How to build
@@ -47,3 +43,5 @@ Use vscode with platform.io plugin and use the defined platform.io project tasks
 * ros2 topic list -t
 * ros2 interface show std_msgs/msg/Int32MultiArray
 * ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32MultiArray "{'data': [10, 20, 30, 40]}"
+
+Note: ROS interface needs Agent (at startup) because implementation is not based on embeddedRTPS yet (see https://github.com/micro-ROS/micro_ros_espidf_component)

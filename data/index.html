@@ -54,10 +54,18 @@ margin-left: 100px; /* Same as the width of the sidenav */
     width: 78px !important;    
 }
 
+.btn-move {
+    width: 78px !important;    
+}
+
 .lua-output {
     font-size: 12px;
     font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
     line-height: 1.2;
+}
+
+.lua-editor {
+    resize:vertical;
 }
 
 </style>
@@ -76,23 +84,41 @@ margin-left: 100px; /* Same as the width of the sidenav */
         <label class="form-label">Manual Control</label>
         <div class="row" style="height:10px;"></div>
     <button id="btn-home" type="button" class="btn-label btn btn-outline-primary">Home</button>
-    <div class="btn-group-vertical">
-        <button id="btn-a1-dec" type="button" class="btn btn-outline-primary">A1 -</button>
-        <button id="btn-a2-dec" type="button" class="btn btn-outline-primary">A2 -</button>
-        <button id="btn-a3-dec" type="button" class="btn btn-outline-primary">A3 -</button>
-        <button id="btn-a4-dec" type="button" class="btn btn-outline-primary">Gripper Close</button>
+    <div class="btn-group-vertical btn-move">
+        <button id="btn-a1-fast-dec" type="button" class="btn btn-outline-primary">--</button>
+        <button id="btn-a2-fast-dec" type="button" class="btn btn-outline-primary">--</button>
+        <button id="btn-a3-fast-dec" type="button" class="btn btn-outline-primary">--</button>
+        <button id="btn-a4-fast-dec" type="button" class="btn btn-outline-primary">--</button>
+      </div>
+    <div class="btn-group-vertical btn-move">
+        <button id="btn-a1-dec" type="button" class="btn btn-outline-primary">-</button>
+        <button id="btn-a2-dec" type="button" class="btn btn-outline-primary">-</button>
+        <button id="btn-a3-dec" type="button" class="btn btn-outline-primary">-</button>
+        <button id="btn-a4-dec" type="button" class="btn btn-outline-primary">-</button>
       </div>
       <div class="btn-group-vertical">
-        <button id="pos-a1" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
-        <button id="pos-a2" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
-        <button id="pos-a3" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
-        <button id="pos-a4" type="button" class="btn-label btn btn-outline-primary disabled">0</button>
+        <button type="button" class="btn-label btn btn-secondary" disabled>A1</button>
+        <button type="button" class="btn-label btn btn-secondary" disabled>A2</button>
+        <button type="button" class="btn-label btn btn-secondary" disabled>A3</button>
+        <button type="button" class="btn-label btn btn-secondary" disabled>Gripper</button>
       </div>
-    <div class="btn-group-vertical">
-        <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">A1 +</button>
-        <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">A2 +</button>
-        <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">A3 +</button>
-        <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">Gripper Open</button>
+      <div class="btn-group-vertical">
+        <button id="pos-a1" type="button" class="btn-label btn btn-secondary" disabled>0</button>
+        <button id="pos-a2" type="button" class="btn-label btn btn-secondary" disabled>0</button>
+        <button id="pos-a3" type="button" class="btn-label btn btn-secondary" disabled>0</button>
+        <button id="pos-a4" type="button" class="btn-label btn btn-secondary" disabled>0</button>
+      </div>
+    <div class="btn-group-vertical btn-move">
+        <button id="btn-a1-inc" type="button" class="btn btn-outline-primary">+</button>
+        <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">+</button>
+        <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">+</button>
+        <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">+</button>
+      </div> 
+      <div class="btn-group-vertical btn-move">
+        <button id="btn-a1-fast-inc" type="button" class="btn btn-outline-primary">++</button>
+        <button id="btn-a2-fast-inc" type="button" class="btn btn-outline-primary">++</button>
+        <button id="btn-a3-fast-inc" type="button" class="btn btn-outline-primary">++</button>
+        <button id="btn-a4-fast-inc" type="button" class="btn btn-outline-primary">++</button>
       </div> 
       <div class="row" style="height:20px;"></div>
     </div>
@@ -101,7 +127,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <div class="container border border-primary rounded">
         <div class="mb-3">
         <label for="luaScriptEditor" class="form-label">Robo Script</label>
-        <pre id="luaScriptEditor" style="height: 203px;" class="ace_editor ace-tm" draggable="false">
+        <pre id="luaScriptEditor" style="height: 203px;" class="ace_editor ace-tm lua-editor" draggable="false">
             <div style="position: absolute;"></div>
     </div>
     <button id="btn-run-lua" type="button" class="btn-label btn btn-outline-primary">Run</button>
@@ -145,7 +171,8 @@ margin-left: 100px; /* Same as the width of the sidenav */
     ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14");
     var luaEditor = ace.edit("luaScriptEditor");
     luaEditor.setTheme("ace/theme/monokai");
-    luaEditor.session.setMode("ace/mode/lua"); 
+    luaEditor.session.setMode("ace/mode/lua");
+//    luaEditor.setAutoScrollEditorIntoView(true);
 
     var source = new EventSource('/events');
 
@@ -252,12 +279,14 @@ margin-left: 100px; /* Same as the width of the sidenav */
     // manual control
     // **************
 
-    $('[id^="btn-a"]').click(function(){
+    $('[id^="btn-a"]').click(function() {
         var id = $(this).attr('id');
         var axis = parseInt(id.match(/\d/)[0]);
         var direction = id.endsWith("inc") ? 1 : -1;
+        var step = id.includes("fast") ? 10 : 1;
         var pos = get_joint_angles_from_display();
-        pos[axis-1] += direction;
+        pos[axis-1] += direction * step;
+//        console.log("new pos: " + pos);
         set_joint_angles_on_controller(pos);
     });
 
@@ -269,6 +298,10 @@ margin-left: 100px; /* Same as the width of the sidenav */
     // **************
     // lua script
     // **************
+
+    $('#luaScriptEditor').mouseup(function(){
+        luaEditor.resize();
+    });
 
     $('#btn-run-lua').click(function(){
         // clear the output window

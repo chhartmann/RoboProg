@@ -13,6 +13,8 @@
 		"max": 180
 	}],
 	"home": [90, 90, 90, 90],
+	"direction": [1, 1, 1, 1],
+	"offset": [0, 0, 0, 0],
 	"Autostart-Script": false,
 	"Wifi-SSID": "",
 	"Wifi-Password": "",

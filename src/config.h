@@ -3,7 +3,7 @@
 
 #include <ArduinoJson.h>
 
-typedef StaticJsonDocument<512> ConfigJsonDoc;
+typedef StaticJsonDocument<1024> ConfigJsonDoc;
 static const char* wifi_ssid_key = "Wifi-SSID";
 static const char* wifi_pwd_key = "Wifi-Password";
 static const char* wifi_hostname_key = "Hostname";
