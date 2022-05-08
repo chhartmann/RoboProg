@@ -1,5 +1,8 @@
 #include <servo_handler.h>
+#include <web_interface.h>
 #include <ESP32Servo.h>
+
+void set_servo_angle(int servo_num, int angle);
 
 Servo servo1;
 Servo servo2;
@@ -11,33 +14,64 @@ static const int servo_pins[num_servos] = {15, 16, 14, 4};
 
 static int servo_min_angle[num_servos] = {0, 0, 0, 0};
 static int servo_max_angle[num_servos] = {180, 180, 180, 180};
+static int servo_cur_angle[num_servos] = {0, 0, 0, 0};
+static int joint_min_angle[num_servos] = {0, 0, 0, 0};
+static int joint_max_angle[num_servos] = {180, 180, 180, 180};
+static int joint_offset[num_servos] = {0, 0, 0, 0};
+static int joint_direction[num_servos] = {1, 1, 1, 1};
+
+void set_joint_angle(int joint_id, int angle) {
+  if (angle < joint_min_angle[joint_id]) {
+//    web_send_event("lua_output", "Joint limit " + String(joint_min_angle[joint_id]) + " reached for joint " + String(joint_id));
+    angle = joint_min_angle[joint_id];
+  } else if (angle > joint_max_angle[joint_id]) {
+//    web_send_event("lua_output", "Joint limit " + String(joint_max_angle[joint_id]) + " reached for joint " + String(joint_id));
+    angle = joint_max_angle[joint_id];
+  }
+
+  int servo_pos = angle * joint_direction[joint_id] + joint_offset[joint_id];
+  set_servo_angle(joint_id, servo_pos);
+}
+
+int get_joint_angle(int joint_id) {
+  int joint_pos = (servo_cur_angle[joint_id] - joint_offset[joint_id]) * joint_direction[joint_id];
+  return joint_pos;
+}
+
 
 void servo_setup(ConfigJsonDoc& config) {
   for (int i = 0; i < num_servos; i++) {
     servos[i]->attach(servo_pins[i]);
-    servo_min_angle[i] = config["limits"][i]["min"];
-    servo_max_angle[i] = config["limits"][i]["max"];
+    joint_min_angle[i] = config["limits"][i]["min"];
+    joint_max_angle[i] = config["limits"][i]["max"];
+    joint_offset[i] = config["offset"][i];
+    joint_direction[i] = config["direction"][i];
   }
+}
+
+int get_servo_angle(int servo_num) {
+  return servo_cur_angle[servo_num];
 }
 
 void set_servo_angle(int servo_num, int angle) {
   if (angle < servo_min_angle[servo_num]) {
+//    web_send_event("lua_output", "Servo limit " + String(servo_min_angle[servo_num]) + " reached for joint " + String(servo_num));
     angle = servo_min_angle[servo_num];
   } else if (angle > servo_max_angle[servo_num]) {
+//    web_send_event("lua_output", "Servo limit " + String(servo_max_angle[servo_num]) + " reached for joint " + String(servo_num));
     angle = servo_max_angle[servo_num];
   }
+
   servos[servo_num]->write(angle);
+  servo_cur_angle[servo_num] = angle;
+//  Serial.println("Servo angle / Joint Angle " + String(servo_num) + " : " + String(angle) + " / " + String(get_joint_angle(servo_num)));
 }
 
-int get_servo_angle(int servo_num) {
-  return servos[servo_num]->read();
-}
-
-String get_servo_angles_as_json() {
+String get_joint_angles_as_json() {
     StaticJsonDocument<JSON_ARRAY_SIZE(num_servos)> doc;
     JsonArray angles = doc.to<JsonArray>();
     for (int i = 0; i < num_servos; ++i) {
-      angles.add(get_servo_angle(i));
+      angles.add(get_joint_angle(i));
     }
     String response;
     serializeJson(doc, response);

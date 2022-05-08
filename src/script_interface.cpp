@@ -51,7 +51,7 @@ void script_stop() {
 
 static int lua_set_joint_angles(lua_State *lua_state) {
   for (int i = 0; i < num_servos; ++i) {
-    set_servo_angle(i, luaL_checkinteger(lua_state, i + 1));
+    set_joint_angle(i, luaL_checkinteger(lua_state, i + 1));
   }
   return 0;
 }

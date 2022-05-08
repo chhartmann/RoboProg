@@ -93,7 +93,7 @@ void web_setup() {
 
 
     server.on("/rest/get_joint_angles", HTTP_GET, [] (AsyncWebServerRequest *request) {
-      request->send(200, "application/json", get_servo_angles_as_json());
+      request->send(200, "application/json", get_joint_angles_as_json());
     });
 
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/rest/set_joint_angles", [](AsyncWebServerRequest *request, JsonVariant &json) {
@@ -102,7 +102,7 @@ void web_setup() {
       {
         data = json.as<JsonArray>();
         for (int i = 0; i < data.size(); ++i) {
-          set_servo_angle(i, data[i]);
+          set_joint_angle(i, data[i]);
         }
       }
       String response;

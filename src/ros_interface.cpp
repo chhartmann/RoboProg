@@ -23,7 +23,7 @@ void subscription_callback(const void * msgin)
   const std_msgs__msg__Int32MultiArray * msg = (const std_msgs__msg__Int32MultiArray *)msgin;
 
   for (int i = 0; i < msg->data.size; ++i) {
-    set_servo_angle(i, msg->data.data[i]);
+    set_joint_angle(i, msg->data.data[i]);
   }
 }
 

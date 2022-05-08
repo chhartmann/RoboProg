@@ -137,10 +137,15 @@ margin-left: 100px; /* Same as the width of the sidenav */
     <button id="btn-reload-lua" type="button" class="btn-label btn btn-outline-primary">Reload</button>
     <button id="btn-clear-lua" type="button" class="btn-label btn btn-outline-primary">Clear</button>
     <div class="row" style="height:20px;"></div>
-    <label for="luaScriptOutput" class="form-label">Robo Script Output</label>
+    </div>
+
+    <div class="row" style="height:20px;"></div>
+    <div class="container border border-primary rounded">
+    <div class="row" style="height:20px;"></div>
+    <label for="luaScriptOutput" class="form-label">Web Log</label>
     <textarea class="form-control lua-output" id="luaScriptOutput" rows="7" readonly></textarea>
     <div class="row" style="height:20px;"></div>
-</div>
+    </div>
 </div>
 
 <div id="main_settings" style="display: none" class="main">
@@ -176,7 +181,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
 
     var source = new EventSource('/events');
 
-    source.addEventListener('servo_pos', function (e) {
+    source.addEventListener('joint_pos', function (e) {
 //        console.log("event received: " + e.data);
         set_joint_angles_on_display(JSON.parse(e.data));
     }, false);
