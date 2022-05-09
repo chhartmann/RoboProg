@@ -36,5 +36,5 @@ jobs:
       with:
         name: file-to-flash
         path: |
-          ./pio/build/esp32dev/firmware.bin
-          ./pio/build/esp32dev/spiffs.bin
+          firmware.bin
+          spiffs.bin
