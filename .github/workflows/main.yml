@@ -32,7 +32,7 @@ jobs:
     - name: Build spiffs
       run: pio run --target buildfs --environment esp32dev
     - name: Upload artefacts
-    - uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3
       with:
         name: file-to-flash
         path: |
