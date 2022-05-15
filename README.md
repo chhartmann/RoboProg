@@ -22,6 +22,11 @@ or
 
 Use vscode with platform.io plugin and use the defined platform.io project tasks to build and flash everything you need.
 
+# TODO
+* gitpod support for debugging with qemu (not working yet - very likely because https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/kconfig.html#config-eth-use-openeth is missing)
+* build release bin file with github action, which then can be easily flashed with ESP32 flash tool
+* tests with robotframework and qemu
+
 # REST API
 * /rest/get_joint_angles / HTTP_GET / application/json
 * /rest/set_joint_angles / HTTP_POST / application/json
