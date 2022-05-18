@@ -8,4 +8,4 @@ RUN wget --no-verbose https://github.com/espressif/qemu/releases/download/esp-de
 RUN tar xf qemu-esp-develop-20220203.tar.bz2
 RUN rm qemu-esp-develop-20220203.tar.bz2
 
-ENV PATH="/home/gitpod/.platformio/packages/toolchain-xtensa32/bin:$PATH"
+ENV PATH="~/.platformio/packages/toolchain-xtensa-esp32/bin:$PATH"
