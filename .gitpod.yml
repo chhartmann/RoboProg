@@ -2,8 +2,8 @@ tasks:
   - before: platformio upgrade
   - command: |
       platformio run -e esp32dev
-      platformio run --target buildfs --environment esp32dev
-      platformio run --target qemu-image --environment esp32dev
+      platformio run -t buildfs -e esp32dev
+      platformio run -t qemu-image -e esp32dev
 
 image:
   file: .gitpod.Dockerfile
@@ -14,3 +14,4 @@ vscode:
     - esbenp.prettier-vscode
     - shardulm94.trailing-spaces
     - ritwickdey.LiveServer
+    - webfreak.debug
