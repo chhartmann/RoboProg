@@ -13,7 +13,6 @@
          "cwd": "${workspaceRoot}",
          "remote": true,
          "gdbpath": "${env:HOME}/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-gdb",
-//         "preLaunchTask": "run qemu",
          "valuesFormatting": "parseText"
       }
    ]
