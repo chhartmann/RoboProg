@@ -1,6 +1,7 @@
 #ifndef __SERVO_HANDLER_H__
 #define __SERVO_HANDLER_H__
 
+#include <WString.h>
 #include <config.h>
 
 static const int num_servos = 4;

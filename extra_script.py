@@ -18,6 +18,6 @@ env.AddCustomTarget(
     name="qemu-image",
     dependencies=["$BUILD_DIR/firmware.bin", "$BUILD_DIR/partitions.bin"],
     actions=["platformio run -t buildfs", action], # dependency to spiffs is not working, so build it here
-    title="Qemu Image",
+    title="Build Qemu Image",
 
     description="Image for Qemu")
