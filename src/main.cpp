@@ -10,47 +10,12 @@
 #include <web_interface.h>
 #include <script_interface.h>
 #include <servo_handler.h>
+#include <qemu_eth.h>
 #include <config.h>
-
-#include <esp_eth.h>
-#include <esp_eth_mac.h>
 
 #if __has_include("wifi_secrets.h")
 #include "wifi_secrets.h"
 #endif
-
-// static const char *TAG = "example_connect";
-// static esp_eth_handle_t s_eth_handle = NULL;
-// static esp_eth_mac_t *s_mac = NULL;
-// static esp_eth_phy_t *s_phy = NULL;
-// static esp_eth_netif_glue_handle_t s_eth_glue = NULL;
-
-// static esp_netif_t *eth_start(void) {
-//   char *desc;
-//   esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
-//   // Prefix the interface description with the module TAG
-//   // Warning: the interface desc is used in tests to capture actual connection details (IP, gw, mask)
-//   asprintf(&desc, "%s: %s", TAG, esp_netif_config.if_desc);
-//   esp_netif_config.if_desc = desc;
-//   esp_netif_config.route_prio = 64;
-//   esp_netif_config_t netif_config = {
-//       .base = &esp_netif_config,
-//       .stack = ESP_NETIF_NETSTACK_DEFAULT_ETH
-//   };
-//   esp_netif_t *netif = esp_netif_new(&netif_config);
-//   assert(netif);
-//   free(desc);
-
-//   eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
-//   eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
-//   phy_config.phy_addr = 1;
-
-//   // setup openeth for qemu
-//   phy_config.autonego_timeout_ms = 100;
-//   s_mac = esp_eth_mac_new_openeth(&mac_config);
-//   s_phy = esp_eth_phy_new_dp83848(&phy_config);
-
-// }
 
 void setupOta(const char* hostname) {
   ArduinoOTA
@@ -116,6 +81,8 @@ void setup() {
   //   // Wifi is startet in ros_setup()
   //   ros_setup(configDoc);
   // }
+
+  eth_start();
 
   web_setup();
 //  setupOta(configDoc[wifi_hostname_key]);
