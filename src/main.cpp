@@ -73,19 +73,22 @@ void setup() {
     }
 #endif
 
-  // WiFi.setHostname(configDoc[wifi_hostname_key]);
-
-  // if (configDoc[wifi_ssid_key] == "") {
-  //   WiFi.softAP("RobotProg");
-  // } else {
-  //   // Wifi is startet in ros_setup()
-  //   ros_setup(configDoc);
-  // }
-
+#ifdef USE_ETH_NOT_WIFI
   eth_start();
+#else
+  WiFi.setHostname(configDoc[wifi_hostname_key]);
+
+  if (configDoc[wifi_ssid_key] == "") {
+    WiFi.softAP("RobotProg");
+  } else {
+    // Wifi is startet in ros_setup()
+    ros_setup(configDoc); // TODO use ros also with eth
+  }
+
+ setupOta(configDoc[wifi_hostname_key]);
+#endif
 
   web_setup();
-//  setupOta(configDoc[wifi_hostname_key]);
   servo_setup(configDoc);
   script_setup();
 
@@ -117,4 +120,6 @@ void loop() {
       web_send_event("joint_pos", joint_pos_json);
       Serial.println("Web event: " + joint_pos_json);
     }
+
+    delay(10); // necessary for watchdog reset
 }
