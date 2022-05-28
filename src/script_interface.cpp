@@ -5,7 +5,7 @@
 #include <servo_handler.h>
 #include <web_interface.h>
 
-LuaWrapper lua;
+LuaWrapper* lua = NULL;
 TaskHandle_t luaTaskHandle = NULL;
 String luaScript;
 
@@ -14,7 +14,7 @@ static void add_json_to_table(lua_State *lua_state, JsonVariant& val);
 void luaTaskFunc(void * parameter){
   Serial.println("Lua task started");
   web_send_event("lua_output", "Lua task started");
-  String result = lua.Lua_dostring(&luaScript);  
+  String result = lua->Lua_dostring(&luaScript);
   Serial.println("Lua task finished");
   web_send_event("lua_output", "Lua task finished");
   Serial.println(result);
@@ -45,7 +45,7 @@ void script_stop() {
     luaTaskHandle = NULL;
     Serial.println("Lua task deleted");
     web_send_event("lua_output", "Lua task deleted");
-  }  
+  }
 }
 
 
@@ -146,13 +146,14 @@ static int lua_get_config(lua_State *lua_state) {
 }
 
 void script_setup() {
-  lua.Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
-  lua.Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
-  lua.Lua_register("digitalWrite", (const lua_CFunction) &lua_wrapper_digitalWrite);
-  lua.Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
-  lua.Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
-  lua.Lua_register("logSerial", (const lua_CFunction) &lua_log_serial);
-  lua.Lua_register("logWeb", (const lua_CFunction) &lua_log_web);
-  lua.Lua_register("getConfig", (const lua_CFunction) &lua_get_config);
+  lua = new LuaWrapper();
+  lua->Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
+  lua->Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
+  lua->Lua_register("digitalWrite", (const lua_CFunction) &lua_wrapper_digitalWrite);
+  lua->Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
+  lua->Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
+  lua->Lua_register("logSerial", (const lua_CFunction) &lua_log_serial);
+  lua->Lua_register("logWeb", (const lua_CFunction) &lua_log_web);
+  lua->Lua_register("getConfig", (const lua_CFunction) &lua_get_config);
 }
 

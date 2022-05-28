@@ -41,7 +41,10 @@ int get_joint_angle(int joint_id) {
 
 void servo_setup(ConfigJsonDoc& config) {
   for (int i = 0; i < num_servos; i++) {
+#ifndef USE_ETH_NOT_WIFI
+    // this crashes qemu
     servos[i]->attach(servo_pins[i]);
+#endif
     joint_min_angle[i] = config["limits"][i]["min"];
     joint_max_angle[i] = config["limits"][i]["max"];
     joint_offset[i] = config["offset"][i];

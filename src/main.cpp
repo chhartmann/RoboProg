@@ -26,7 +26,7 @@ void setupOta(const char* hostname) {
       else // U_SPIFFS
         type = "filesystem";
       SPIFFS.end();
-      Serial.println("Start updating " + type);      
+      Serial.println("Start updating " + type);
     })
     .onEnd([]() {
       Serial.println("\nEnd");
@@ -74,6 +74,7 @@ void setup() {
 #endif
 
 #ifdef USE_ETH_NOT_WIFI
+  Serial.println("Starting ethernet...");
   eth_start();
 #else
   WiFi.setHostname(configDoc[wifi_hostname_key]);
