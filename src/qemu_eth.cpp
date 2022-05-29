@@ -39,7 +39,6 @@ void eth_start(void) {
   eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
   eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
 
-  // setup openeth for qemu
   phy_config.autonego_timeout_ms = 100;
   s_mac = esp_eth_mac_new_openeth(&mac_config);
   s_phy = esp_eth_phy_new_dp83848(&phy_config);
@@ -50,12 +49,11 @@ void eth_start(void) {
   esp_eth_config_t config = ETH_DEFAULT_CONFIG(s_mac, s_phy);
   ESP_ERROR_CHECK(esp_eth_driver_install(&config, &s_eth_handle));
 
-
-    s_eth_glue = esp_eth_new_netif_glue(s_eth_handle);
-    esp_netif_attach(netif, s_eth_glue);
+  s_eth_glue = esp_eth_new_netif_glue(s_eth_handle);
+  esp_netif_attach(netif, s_eth_glue);
 
     // Register user defined event handers
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
 
-    esp_eth_start(s_eth_handle);
+  esp_eth_start(s_eth_handle);
 }
