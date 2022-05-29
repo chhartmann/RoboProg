@@ -51,11 +51,11 @@ margin-left: 100px; /* Same as the width of the sidenav */
 }
 
 .btn-label {
-    width: 78px !important;    
+    width: 78px !important;
 }
 
 .btn-move {
-    width: 78px !important;    
+    width: 78px !important;
 }
 
 .lua-output {
@@ -113,16 +113,16 @@ margin-left: 100px; /* Same as the width of the sidenav */
         <button id="btn-a2-inc" type="button" class="btn btn-outline-primary">+</button>
         <button id="btn-a3-inc" type="button" class="btn btn-outline-primary">+</button>
         <button id="btn-a4-inc" type="button" class="btn btn-outline-primary">+</button>
-      </div> 
+      </div>
       <div class="btn-group-vertical btn-move">
         <button id="btn-a1-fast-inc" type="button" class="btn btn-outline-primary">++</button>
         <button id="btn-a2-fast-inc" type="button" class="btn btn-outline-primary">++</button>
         <button id="btn-a3-fast-inc" type="button" class="btn btn-outline-primary">++</button>
         <button id="btn-a4-fast-inc" type="button" class="btn btn-outline-primary">++</button>
-      </div> 
+      </div>
       <div class="row" style="height:20px;"></div>
     </div>
-    
+
     <div class="row" style="height:20px;"></div>
     <div class="container border border-primary rounded">
         <div class="mb-3">
@@ -194,23 +194,6 @@ margin-left: 100px; /* Same as the width of the sidenav */
         $("#luaScriptOutput")[0].scrollTop = $("#luaScriptOutput")[0].scrollHeight;
     }, false);
 
-    function upload(filename, content) {
-        var formData = new FormData();
-        var blob = new Blob([content], {type: "text/plain"});
-        formData.append("file", blob, filename);
-        $.ajax({
-            url: "/upload",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            enctype: 'multipart/form-data',
-            success: function(data) {
-                console.log("upload finished");
-            }
-        });
-    }
-
     function get_joint_angles_from_display() {
         var pos = [];
         for (var i = 0; i < 4; i++) {
@@ -232,13 +215,9 @@ margin-left: 100px; /* Same as the width of the sidenav */
     }
 
     function set_joint_angles_on_controller(angles) {
-        $.ajax({
-            type: "POST", 
-            dataType: "json", 
-            contentType: "application/json", 
-            url: "/rest/set_joint_angles", 
-            data: JSON.stringify(angles),
-        });
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/rest/set_joint_angles", true);
+        xhttp.send(JSON.stringify(angles));
     }
 
     $(document).ready(function(){
@@ -268,7 +247,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
             get_joint_angles_from_controller();
         }
 
-        if (id == "diagnosis") {            
+        if (id == "diagnosis") {
             $.getJSON("/rest/read_diagnosis", function(obj) {
                 var html = "<table class='table table-striped'><tbody>";
                 for(var key in obj) {
@@ -276,7 +255,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
                 }
                 html += "</tbody></table>";
                 $("#diagnosis_content").html(html);
-            });            
+            });
         }
     });
 
@@ -311,8 +290,9 @@ margin-left: 100px; /* Same as the width of the sidenav */
     $('#btn-run-lua').click(function(){
         // clear the output window
         $("#luaScriptOutput").val("");
-
-        upload("run_script", luaEditor.getValue());
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/rest/run_script", true);
+        xhttp.send(luaEditor.getValue());
     });
 
     $('#btn-stop-lua').click(function(){
@@ -322,7 +302,9 @@ margin-left: 100px; /* Same as the width of the sidenav */
     });
 
     $('#btn-save-lua').click(function(){
-        upload("script.lua", luaEditor.getValue());
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/upload/script.lua", true);
+        xhttp.send(luaEditor.getValue());
     });
 
     $('#btn-reload-lua').click(function(){

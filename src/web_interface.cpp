@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <algorithm>
+#include <regex>
 
 #include <web_interface.h>
 #include <script_interface.h>
@@ -26,6 +28,32 @@ static void set_content_type(httpd_req_t *req, const std::string& filename) {
   } else if (ending == ".css") {
     httpd_resp_set_type(req, "text/css");
   }
+}
+
+std::string get_content(httpd_req_t *req) {
+  char buf[1025];
+  int received;
+
+  unsigned int remaining = req->content_len;
+  std::string content;
+  content.reserve(remaining);
+
+  while (remaining > 0) {
+    if ((received = httpd_req_recv(req, buf, std::min(remaining, sizeof(buf) - 1))) <= 0) {
+        if (received == HTTPD_SOCK_ERR_TIMEOUT) {
+            /* Retry if timeout occurred */
+            continue;
+        }
+
+        /* In case of unrecoverable error, close and delete the unfinished file*/
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to receive file");
+    } else {
+      buf[received] = '\0';
+      content += buf;
+      remaining -= received;
+    }
+  }
+  return content;
 }
 
 esp_err_t download_get_handler(httpd_req_t *req) {
@@ -59,16 +87,60 @@ esp_err_t download_get_handler(httpd_req_t *req) {
   }
 }
 
+esp_err_t upload_post_handler(httpd_req_t *req)
+{
+  std::string content = get_content(req);
+
+  std::string uri = req->uri;
+  uri = uri.substr(0, uri.find('?'));
+  std::string filename = std::regex_replace(uri, std::regex("upload"), "spiffs");
+
+  FILE* file = fopen(filename.c_str(), "w");
+  if (!file) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to create file");
+        return ESP_FAIL;
+  } else {
+    (void)fwrite(content.c_str(), 1, content.length(), file);
+    fclose(file);
+    Serial.printf("File %s uploaded successfully\n", filename.c_str());
+    httpd_resp_set_hdr(req, "Connection", "close");
+  httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+  }
+}
+
+esp_err_t upload_rest_run_script_handler(httpd_req_t *req)
+{
+  std::string content = get_content(req);
+  script_run(content.c_str());
+  httpd_resp_set_hdr(req, "Connection", "close");
+  httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
+  return ESP_OK;
+}
+
+esp_err_t rest_set_joint_angles_handler(httpd_req_t *req)
+{
+  std::string content = get_content(req);
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, content);
+  JsonArray angles = doc.as<JsonArray>();
+  for (int i = 0; i < doc.size(); ++i) {
+    set_joint_angle(i, doc[i]);
+  }
+
+  httpd_resp_set_hdr(req, "Connection", "close");
+  httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
+  return ESP_OK;
+}
+
 esp_err_t rest_stop_script_handler(httpd_req_t *req) {
   script_stop();
-  const char resp[] = "OK";
-  httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+  httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }
 
 esp_err_t rest_reset_handler(httpd_req_t *req) {
-  const char resp[] = "OK";
-  httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+  httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
   Serial.println("Restarting...");
   ESP.restart();
   return ESP_OK;
@@ -119,130 +191,81 @@ esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
   return ESP_OK;
 }
 
-httpd_uri_t file_download = {
-    .uri       = "/*",
-    .method    = HTTP_GET,
-    .handler   = download_get_handler,
-    .user_ctx  = NULL
-};
-
-httpd_uri_t rest_stop_script = {
-    .uri       = "/rest/stop_script",
-    .method    = HTTP_GET,
-    .handler   = rest_stop_script_handler,
-    .user_ctx  = NULL
-};
-
-httpd_uri_t rest_reset = {
-    .uri       = "/rest/restart",
-    .method    = HTTP_GET,
-    .handler   = rest_reset_handler,
-    .user_ctx  = NULL
-};
-
-httpd_uri_t rest_get_joint_angles = {
-    .uri       = "/rest/get_joint_angles",
-    .method    = HTTP_GET,
-    .handler   = rest_get_joint_angles_handler,
-    .user_ctx  = NULL
-};
-
-httpd_uri_t rest_read_diagnosis = {
-    .uri       = "/rest/read_diagnosis",
-    .method    = HTTP_GET,
-    .handler   = rest_read_diagnosis_handler,
-    .user_ctx  = NULL
-};
-
-
 
 void web_setup() {
 
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   httpd_handle_t server = NULL;
   config.uri_match_fn = httpd_uri_match_wildcard;
-
   ESP_ERROR_CHECK(httpd_start(&server, &config));
+
+  httpd_uri_t rest_set_joint_angles = {
+      .uri       = "/rest/set_joint_angles",
+      .method    = HTTP_POST,
+      .handler   = rest_set_joint_angles_handler,
+      .user_ctx  = NULL
+  };
+  httpd_register_uri_handler(server, &rest_set_joint_angles);
+
+  httpd_uri_t rest_get_joint_angles = {
+      .uri       = "/rest/get_joint_angles",
+      .method    = HTTP_GET,
+      .handler   = rest_get_joint_angles_handler,
+      .user_ctx  = NULL
+  };
   httpd_register_uri_handler(server, &rest_get_joint_angles);
+
+  httpd_uri_t rest_read_diagnosis = {
+      .uri       = "/rest/read_diagnosis",
+      .method    = HTTP_GET,
+      .handler   = rest_read_diagnosis_handler,
+      .user_ctx  = NULL
+  };
   httpd_register_uri_handler(server, &rest_read_diagnosis);
+
+  httpd_uri_t rest_stop_script = {
+      .uri       = "/rest/stop_script",
+      .method    = HTTP_GET,
+      .handler   = rest_stop_script_handler,
+      .user_ctx  = NULL
+  };
   httpd_register_uri_handler(server, &rest_stop_script);
+
+  httpd_uri_t rest_run_script = {
+    .uri       = "/rest/run_script",
+    .method    = HTTP_POST,
+    .handler   = upload_rest_run_script_handler,
+    .user_ctx  = NULL
+  };
+  httpd_register_uri_handler(server, &rest_run_script);
+
+  httpd_uri_t rest_reset = {
+      .uri       = "/rest/restart",
+      .method    = HTTP_GET,
+      .handler   = rest_reset_handler,
+      .user_ctx  = NULL
+  };
   httpd_register_uri_handler(server, &rest_reset);
+
+  httpd_uri_t file_download = {
+      .uri       = "/*",
+      .method    = HTTP_GET,
+      .handler   = download_get_handler,
+      .user_ctx  = NULL
+  };
   httpd_register_uri_handler(server, &file_download);
+
+  httpd_uri_t file_upload = {
+      .uri       = "/upload/*",
+      .method    = HTTP_POST,
+      .handler   = upload_post_handler,
+      .user_ctx  = NULL
+  };
+  httpd_register_uri_handler(server, &file_upload);
 }
 
 void web_send_event(const char* event_name, String& event_data){}
 void web_send_event(const char* event_name, const char* event_data){}
-
-
-// AsyncWebServer server(80);
-// AsyncEventSource events("/events");
-
-// void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-//   String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
-//   Serial.println(logmessage);
-//   String file;
-
-//   if (!index) {
-//     logmessage = "Upload Start: " + String(filename);
-//     Serial.println(logmessage);
-//     script_stop(); // just be sure - might be running from string buffer
-//     file = "";
-//   }
-
-//   if (len) {
-//     logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
-//     Serial.println(logmessage);
-//     for (size_t i = 0; i < len; i++) {
-//       file += (char)data[i];
-//     }
-//   }
-
-//   if (final) {
-//     logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
-//     Serial.println(logmessage);
-
-//     if (filename == "run_script") {
-//       script_run(file.c_str());
-//     } else {
-//       File spiffs = SPIFFS.open("/" + filename, "w");
-//       spiffs.write((const uint8_t*)file.c_str(), file.length());
-//       spiffs.close();
-//     }
-// //    request->redirect("/");
-//     request->send(200);
-//   }
-// }
-
-
-// void web_setup() {
-
-//     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/rest/set_joint_angles", [](AsyncWebServerRequest *request, JsonVariant &json) {
-//       StaticJsonDocument<200> data;
-//       if (json.is<JsonArray>())
-//       {
-//         data = json.as<JsonArray>();
-//         for (int i = 0; i < data.size(); ++i) {
-//           set_joint_angle(i, data[i]);
-//         }
-//       }
-//       String response;
-//       serializeJson(data, response);
-//       Serial.println("/rest/set_joint_angles: " + data.as<String>());
-// //      Serial.println(response);
-//       request->send(200, "application/json", response);
-//     });
-//     server.addHandler(handler);
-
-//     events.onConnect([](AsyncEventSourceClient *client){
-//       if(client->lastId()){
-//         Serial.printf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
-//       }
-// //      client->send("hello!",NULL,millis(),1000);
-//     });
-//     server.addHandler(&events);
-
-//     server.begin();
-// }
 
 // void web_send_event(const char* event_name, String& event_data) {
 //   events.send(event_data.c_str(), event_name);

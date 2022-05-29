@@ -19,10 +19,10 @@ void luaTaskFunc(void * parameter){
   web_send_event("lua_output", "Lua task finished");
   Serial.println(result);
   web_send_event("lua_output", result);
-  // TaskStatus_t pxTaskStatus;
-  // vTaskGetInfo(NULL, &pxTaskStatus, pdTRUE, eInvalid);
-  // Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
-  // Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
+  TaskStatus_t pxTaskStatus;
+  vTaskGetInfo(NULL, &pxTaskStatus, pdTRUE, eInvalid);
+  Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
+  Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
   luaTaskHandle = NULL;
   vTaskDelete(NULL);
 }
@@ -36,10 +36,10 @@ void script_run(const char* data) {
 
 void script_stop() {
   if (luaTaskHandle != NULL) {
-    // TaskStatus_t pxTaskStatus;
-    // vTaskGetInfo(luaTaskHandle, &pxTaskStatus, pdTRUE, eInvalid);
-    // Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
-    // Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
+    TaskStatus_t pxTaskStatus;
+    vTaskGetInfo(luaTaskHandle, &pxTaskStatus, pdTRUE, eInvalid);
+    Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
+    Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
 
     vTaskDelete(luaTaskHandle);
     luaTaskHandle = NULL;
