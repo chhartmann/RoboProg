@@ -13,12 +13,12 @@ static void add_json_to_table(lua_State *lua_state, JsonVariant& val);
 
 void luaTaskFunc(void * parameter){
   Serial.println("Lua task started");
-  web_send_event("lua_output", "Lua task started");
+  web_send("log", "Lua task started");
   String result = lua->Lua_dostring(&luaScript);
   Serial.println("Lua task finished");
-  web_send_event("lua_output", "Lua task finished");
+  web_send("log", "Lua task finished");
   Serial.println(result);
-  web_send_event("lua_output", result);
+  web_send("log", result);
   TaskStatus_t pxTaskStatus;
   vTaskGetInfo(NULL, &pxTaskStatus, pdTRUE, eInvalid);
   Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
@@ -44,7 +44,7 @@ void script_stop() {
     vTaskDelete(luaTaskHandle);
     luaTaskHandle = NULL;
     Serial.println("Lua task deleted");
-    web_send_event("lua_output", "Lua task deleted");
+    web_send("log", "Lua task deleted");
   }
 }
 
@@ -92,7 +92,7 @@ static int lua_log_serial(lua_State *lua_state) {
 static int lua_log_web(lua_State *lua_state) {
   const char* a = luaL_checkstring(lua_state, 1);
   String msg = a;
-  web_send_event("lua_output", msg);
+  web_send("log", msg);
   return 0;
 }
 

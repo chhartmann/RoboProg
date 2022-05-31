@@ -179,20 +179,30 @@ margin-left: 100px; /* Same as the width of the sidenav */
     luaEditor.session.setMode("ace/mode/lua");
 //    luaEditor.setAutoScrollEditorIntoView(true);
 
-    var source = new EventSource('/events');
+    ws = new WebSocket("ws://" + location.host + "/ws");
+    ws.onopen = function(e) {
+        console.log("ws connection established");
+    };
 
-    source.addEventListener('joint_pos', function (e) {
-//        console.log("event received: " + e.data);
-        set_joint_angles_on_display(JSON.parse(e.data));
-    }, false);
+    ws.onmessage = function(event) {
+        var msg = JSON.parse(event.data);
+        if (msg.type == "pos") {
+            set_joint_angles_on_display(JSON.parse(msg.data));
+        } else {
+            var output = $("#luaScriptOutput").val();
+            output += msg.data + "\n";
+            $("#luaScriptOutput").val(output);
+            $("#luaScriptOutput")[0].scrollTop = $("#luaScriptOutput")[0].scrollHeight;
+        }
+    };
 
-    source.addEventListener('lua_output', function (e) {
-//        console.log("event received: " + e.data);
-        var output = $("#luaScriptOutput").val();
-        output += e.data + "\n";
-        $("#luaScriptOutput").val(output);
-        $("#luaScriptOutput")[0].scrollTop = $("#luaScriptOutput")[0].scrollHeight;
-    }, false);
+    ws.onclose = function(event) {
+        console.log("ws closed");
+    };
+
+    ws.onerror = function(error) {
+        console.log("ws error: ", error);
+    };
 
     function get_joint_angles_from_display() {
         var pos = [];
