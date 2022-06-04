@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 #include <SPIFFS.h>
 #include <cstdint>
-#include <esp_http_server.h>
+#include <esp_https_server.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -210,10 +210,21 @@ static esp_err_t ws_handler(httpd_req_t *req)
 
 void web_setup() {
 
-  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-  config.uri_match_fn = httpd_uri_match_wildcard;
-  config.max_uri_handlers = 16;
-  ESP_ERROR_CHECK(httpd_start(&server, &config));
+  httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
+
+  extern const unsigned char servercert_start[] asm("_binary_servercert_pem_start");
+  extern const unsigned char servercert_end[]   asm("_binary_servercert_pem_end");
+  conf.cacert_pem = servercert_start;
+  conf.cacert_len = servercert_end - servercert_start;
+
+  extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
+  extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
+  conf.prvtkey_pem = prvtkey_pem_start;
+  conf.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
+
+  conf.httpd.uri_match_fn = httpd_uri_match_wildcard;
+  conf.httpd.max_uri_handlers = 16;
+  ESP_ERROR_CHECK(httpd_ssl_start(&server, &conf));
 
   httpd_uri_t rest_set_joint_angles = {
       .uri       = "/rest/set_joint_angles",

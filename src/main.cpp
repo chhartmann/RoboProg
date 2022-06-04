@@ -119,7 +119,7 @@ void loop() {
     if (publish_joint_pos) {
       String joint_pos_json = get_joint_angles_as_json();
       web_send("pos", joint_pos_json);
-      Serial.println("Web event: " + joint_pos_json);
+      Serial.println("Web socket: " + joint_pos_json);
     }
 
     delay(10); // necessary for watchdog reset

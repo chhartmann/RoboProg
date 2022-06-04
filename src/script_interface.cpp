@@ -39,7 +39,7 @@ void script_stop() {
     TaskStatus_t pxTaskStatus;
     vTaskGetInfo(luaTaskHandle, &pxTaskStatus, pdTRUE, eInvalid);
     Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
-    Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
+    Serial.println(String("Unused Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
 
     vTaskDelete(luaTaskHandle);
     luaTaskHandle = NULL;

@@ -179,7 +179,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     luaEditor.session.setMode("ace/mode/lua");
 //    luaEditor.setAutoScrollEditorIntoView(true);
 
-    ws = new WebSocket("ws://" + location.host + "/ws");
+    ws = new WebSocket("wss://" + location.host + "/ws");
     ws.onopen = function(e) {
         console.log("ws connection established");
     };
