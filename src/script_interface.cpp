@@ -5,9 +5,11 @@
 #include <servo_handler.h>
 #include <web_interface.h>
 
-#include <lua/lua.h>
-#include <lua/lauxlib.h>
-#include <lua/lualib.h>
+extern "C" {
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+}
 
 lua_State* luaState;
 TaskHandle_t luaTaskHandle = NULL;
@@ -147,7 +149,7 @@ void script_setup() {
   luaopen_table(luaState);
   luaopen_string(luaState);
   luaopen_math(luaState);
-  lua_register(luaState, "set_joint_angles", lua_set_joint_angles);
+  lua_register(luaState, "setJointAngles", lua_set_joint_angles);
   lua_register(luaState, "pinMode", lua_wrapper_pinMode);
   lua_register(luaState, "digitalWrite", lua_wrapper_digitalWrite);
   lua_register(luaState, "digitalRead", lua_wrapper_digitalRead);
