@@ -10,13 +10,20 @@
 #include <algorithm>
 #include <regex>
 
+#include <ws_keep_alive.h>
 #include <web_interface.h>
 #include <script_interface.h>
 #include <servo_handler.h>
 
+struct async_resp_arg {
+    httpd_handle_t hd;
+    int fd;
+    std::string msg;
+};
+
 httpd_handle_t server = NULL;
-bool ws_connected = false;
-int ws_fd;
+static const size_t max_clients = 4;
+static const char *TAG = "wss";
 
 static void set_content_type(httpd_req_t *req, const std::string& filename) {
   std::string ending = filename.substr(filename.find('.'));
@@ -197,18 +204,104 @@ esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
 
 static esp_err_t ws_handler(httpd_req_t *req)
 {
-    if (req->method == HTTP_GET) {
-        Serial.println("Websocket connection established");
-        ws_fd = httpd_req_to_sockfd(req);
-        ws_connected = true;
-        return ESP_OK;
-    }
+  if (req->method == HTTP_GET) {
+      ESP_LOGI(TAG, "Handshake done, the new connection was opened");
+      return ESP_OK;
+  }
+  httpd_ws_frame_t ws_pkt;
+  uint8_t *buf = NULL;
+  memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
 
-    Serial.println("Websocket unexpected method");
-    return ESP_FAIL;
+  // First receive the full ws message
+  /* Set max_len = 0 to get the frame len */
+  esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
+  if (ret != ESP_OK) {
+      ESP_LOGE(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
+      return ret;
+  }
+  ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
+  if (ws_pkt.len) {
+      /* ws_pkt.len + 1 is for NULL termination as we are expecting a string */
+      buf = (uint8_t*)calloc(1, ws_pkt.len + 1);
+      if (buf == NULL) {
+          ESP_LOGE(TAG, "Failed to calloc memory for buf");
+          return ESP_ERR_NO_MEM;
+      }
+      ws_pkt.payload = buf;
+      /* Set max_len = ws_pkt.len to get the frame payload */
+      ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
+      if (ret != ESP_OK) {
+          ESP_LOGE(TAG, "httpd_ws_recv_frame failed with %d", ret);
+          free(buf);
+          return ret;
+      }
+  }
+  // If it was a PONG, update the keep-alive
+  if (ws_pkt.type == HTTPD_WS_TYPE_PONG) {
+      ESP_LOGD(TAG, "Received PONG message");
+      free(buf);
+      return wss_keep_alive_client_is_active((wss_keep_alive_storage*)httpd_get_global_user_ctx(req->handle),
+              httpd_req_to_sockfd(req));
+  }
+  free(buf);
+  return ESP_OK;
+}
+
+static void send_ping(void *arg)
+{
+    async_resp_arg *resp_arg = (struct async_resp_arg*)arg;
+    httpd_handle_t hd = resp_arg->hd;
+    int fd = resp_arg->fd;
+    httpd_ws_frame_t ws_pkt;
+    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+    ws_pkt.payload = NULL;
+    ws_pkt.len = 0;
+    ws_pkt.type = HTTPD_WS_TYPE_PING;
+
+    httpd_ws_send_frame_async(hd, fd, &ws_pkt);
+    delete resp_arg;
+}
+
+bool check_client_alive_cb(wss_keep_alive_t h, int fd)
+{
+    ESP_LOGD(TAG, "Checking if client (fd=%d) is alive", fd);
+    async_resp_arg *resp_arg = new async_resp_arg();
+    resp_arg->hd = wss_keep_alive_get_user_ctx(h);
+    resp_arg->fd = fd;
+
+    if (httpd_queue_work(resp_arg->hd, send_ping, resp_arg) == ESP_OK) {
+        return true;
+    }
+    return false;
+}
+
+bool client_not_alive_cb(wss_keep_alive_t h, int fd)
+{
+    ESP_LOGE(TAG, "Client not alive, closing fd %d", fd);
+    httpd_sess_trigger_close(wss_keep_alive_get_user_ctx(h), fd);
+    return true;
+}
+
+esp_err_t wss_open_fd(httpd_handle_t hd, int sockfd)
+{
+    ESP_LOGI(TAG, "New client connected %d", sockfd);
+    wss_keep_alive_t h = (wss_keep_alive_t)httpd_get_global_user_ctx(hd);
+    return wss_keep_alive_add_client(h, sockfd);
+}
+
+void wss_close_fd(httpd_handle_t hd, int sockfd)
+{
+    ESP_LOGI(TAG, "Client disconnected %d", sockfd);
+    wss_keep_alive_t h = (wss_keep_alive_t)httpd_get_global_user_ctx(hd);
+    wss_keep_alive_remove_client(h, sockfd);
 }
 
 void web_setup() {
+  wss_keep_alive_config_t keep_alive_config = KEEP_ALIVE_CONFIG_DEFAULT();
+  keep_alive_config.max_clients = max_clients;
+  keep_alive_config.client_not_alive_cb = client_not_alive_cb;
+  keep_alive_config.check_client_alive_cb = check_client_alive_cb;
+  wss_keep_alive_t keep_alive = wss_keep_alive_start(&keep_alive_config);
 
   httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
 
@@ -224,6 +317,11 @@ void web_setup() {
 
   conf.httpd.uri_match_fn = httpd_uri_match_wildcard;
   conf.httpd.max_uri_handlers = 16;
+  conf.httpd.max_open_sockets = max_clients;
+  conf.httpd.global_user_ctx = keep_alive;
+  conf.httpd.open_fn = wss_open_fd;
+  conf.httpd.close_fn = wss_close_fd;
+
   ESP_ERROR_CHECK(httpd_ssl_start(&server, &conf));
 
   httpd_uri_t rest_set_joint_angles = {
@@ -302,28 +400,43 @@ void web_setup() {
 
 static void ws_async_send(void *arg)
 {
-  String *data = (String *)arg;
-  if (ws_connected) {
-    httpd_ws_frame_t ws_pkt;
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t*)data->c_str();
-    ws_pkt.len = data->length();
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-    httpd_ws_send_frame_async(server, ws_fd, &ws_pkt);
-  }
-  free(data);
+  static char* buffer = "hello world";
+  async_resp_arg *resp_arg = (async_resp_arg*)arg;
+  httpd_handle_t hd = resp_arg->hd;
+  int fd = resp_arg->fd;
+  httpd_ws_frame_t ws_pkt;
+  memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+  ws_pkt.payload = (uint8_t*)buffer; //(uint8_t*)resp_arg->msg.c_str();
+  ws_pkt.len = 5; //resp_arg->msg.length();
+  ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+
+  httpd_ws_send_frame_async(hd, fd, &ws_pkt);
+  free(resp_arg);
 }
 
 void web_send(const char* type, String data) {
-  if (ws_connected) {
-    const size_t CAPACITY = JSON_OBJECT_SIZE(2);
-    StaticJsonDocument<CAPACITY> doc;
-    JsonObject object = doc.to<JsonObject>();
-    object["type"] = type;
-    object["data"] = data.c_str();
-    String json;
-    serializeJson(doc, json);
-    void* arg = new String(json);
-    (void)httpd_queue_work(server, ws_async_send, arg);
+  bool send_messages = true;
+
+  size_t clients = max_clients;
+  int    client_fds[max_clients];
+  if (httpd_get_client_list(server, &clients, client_fds) == ESP_OK) {
+      for (size_t i=0; i < clients; ++i) {
+          int sock = client_fds[i];
+          if (httpd_ws_get_fd_info(server, sock) == HTTPD_WS_CLIENT_WEBSOCKET) {
+              ESP_LOGI(TAG, "Active client (fd=%d) -> sending async message", sock);
+              async_resp_arg *resp_arg = new async_resp_arg();
+              resp_arg->hd = server;
+              resp_arg->fd = sock;
+              resp_arg->msg = data.c_str();
+              if (httpd_queue_work(resp_arg->hd, ws_async_send, resp_arg) != ESP_OK) {
+                  ESP_LOGE(TAG, "httpd_queue_work failed!");
+                  send_messages = false;
+                  break;
+              }
+          }
+      }
+  } else {
+      ESP_LOGE(TAG, "httpd_get_client_list failed!");
+      return;
   }
 }
