@@ -23,14 +23,14 @@ or
 Use vscode with platform.io plugin and use the defined platform.io project tasks to build and flash everything you need.
 
 # How to debug with qemu:
-* Build full image for qemu: "platformio run -t qemu-image -e esp32dev
+* Build full image for qemu: "platformio run -t qemu-image -e esp32dev_qemu"
 * Run qemu: ctrl+P task run qemu
 * Set breakpoint
 * Start debugger: F5
 
 
 # TODO
-* use open-eth instead of wifi for qemu to be able to test and debug
+* use ros also with open-eth
 * build release bin file with github action, which then can be easily flashed with ESP32 flash tool
 * tests with robotframework and qemu
 

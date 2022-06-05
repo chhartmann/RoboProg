@@ -5,7 +5,7 @@
 #include <servo_handler.h>
 #include <web_interface.h>
 
-LuaWrapper lua;
+LuaWrapper* lua = NULL;
 TaskHandle_t luaTaskHandle = NULL;
 String luaScript;
 
@@ -13,16 +13,16 @@ static void add_json_to_table(lua_State *lua_state, JsonVariant& val);
 
 void luaTaskFunc(void * parameter){
   Serial.println("Lua task started");
-  web_send_event("lua_output", "Lua task started");
-  String result = lua.Lua_dostring(&luaScript);  
+  web_send("log", "Lua task started");
+  String result = lua->Lua_dostring(&luaScript);
   Serial.println("Lua task finished");
-  web_send_event("lua_output", "Lua task finished");
+  web_send("log", "Lua task finished");
   Serial.println(result);
-  web_send_event("lua_output", result);
-  // TaskStatus_t pxTaskStatus;
-  // vTaskGetInfo(NULL, &pxTaskStatus, pdTRUE, eInvalid);
-  // Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
-  // Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
+  web_send("log", result);
+  TaskStatus_t pxTaskStatus;
+  vTaskGetInfo(NULL, &pxTaskStatus, pdTRUE, eInvalid);
+  Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
+  Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
   luaTaskHandle = NULL;
   vTaskDelete(NULL);
 }
@@ -36,16 +36,16 @@ void script_run(const char* data) {
 
 void script_stop() {
   if (luaTaskHandle != NULL) {
-    // TaskStatus_t pxTaskStatus;
-    // vTaskGetInfo(luaTaskHandle, &pxTaskStatus, pdTRUE, eInvalid);
-    // Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
-    // Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
+    TaskStatus_t pxTaskStatus;
+    vTaskGetInfo(luaTaskHandle, &pxTaskStatus, pdTRUE, eInvalid);
+    Serial.println(String("Task Name: ") + pxTaskStatus.pcTaskName);
+    Serial.println(String("Task Stack Size: ") + pxTaskStatus.usStackHighWaterMark);
 
     vTaskDelete(luaTaskHandle);
     luaTaskHandle = NULL;
     Serial.println("Lua task deleted");
-    web_send_event("lua_output", "Lua task deleted");
-  }  
+    web_send("log", "Lua task deleted");
+  }
 }
 
 
@@ -92,7 +92,7 @@ static int lua_log_serial(lua_State *lua_state) {
 static int lua_log_web(lua_State *lua_state) {
   const char* a = luaL_checkstring(lua_state, 1);
   String msg = a;
-  web_send_event("lua_output", msg);
+  web_send("log", msg);
   return 0;
 }
 
@@ -146,13 +146,14 @@ static int lua_get_config(lua_State *lua_state) {
 }
 
 void script_setup() {
-  lua.Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
-  lua.Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
-  lua.Lua_register("digitalWrite", (const lua_CFunction) &lua_wrapper_digitalWrite);
-  lua.Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
-  lua.Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
-  lua.Lua_register("logSerial", (const lua_CFunction) &lua_log_serial);
-  lua.Lua_register("logWeb", (const lua_CFunction) &lua_log_web);
-  lua.Lua_register("getConfig", (const lua_CFunction) &lua_get_config);
+  lua = new LuaWrapper();
+  lua->Lua_register("setJointAngles", (const lua_CFunction) &lua_set_joint_angles);
+  lua->Lua_register("pinMode", (const lua_CFunction) &lua_wrapper_pinMode);
+  lua->Lua_register("digitalWrite", (const lua_CFunction) &lua_wrapper_digitalWrite);
+  lua->Lua_register("digitalRead", (const lua_CFunction) &lua_wrapper_digitalRead);
+  lua->Lua_register("delay", (const lua_CFunction) &lua_wrapper_delay);
+  lua->Lua_register("logSerial", (const lua_CFunction) &lua_log_serial);
+  lua->Lua_register("logWeb", (const lua_CFunction) &lua_log_web);
+  lua->Lua_register("getConfig", (const lua_CFunction) &lua_get_config);
 }
 

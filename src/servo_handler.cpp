@@ -22,10 +22,10 @@ static int joint_direction[num_servos] = {1, 1, 1, 1};
 
 void set_joint_angle(int joint_id, int angle) {
   if (angle < joint_min_angle[joint_id]) {
-    web_send_event("lua_output", "Joint limit " + String(joint_min_angle[joint_id]) + " reached for joint " + String(joint_id));
+    web_send("log", "Joint limit " + String(joint_min_angle[joint_id]) + " reached for joint " + String(joint_id));
     angle = joint_min_angle[joint_id];
   } else if (angle > joint_max_angle[joint_id]) {
-    web_send_event("lua_output", "Joint limit " + String(joint_max_angle[joint_id]) + " reached for joint " + String(joint_id));
+    web_send("log", "Joint limit " + String(joint_max_angle[joint_id]) + " reached for joint " + String(joint_id));
     angle = joint_max_angle[joint_id];
   }
 
@@ -41,7 +41,10 @@ int get_joint_angle(int joint_id) {
 
 void servo_setup(ConfigJsonDoc& config) {
   for (int i = 0; i < num_servos; i++) {
+#ifndef USE_ETH_NOT_WIFI
+    // this crashes qemu
     servos[i]->attach(servo_pins[i]);
+#endif
     joint_min_angle[i] = config["limits"][i]["min"];
     joint_max_angle[i] = config["limits"][i]["max"];
     joint_offset[i] = config["offset"][i];
@@ -55,10 +58,10 @@ int get_servo_angle(int servo_num) {
 
 void set_servo_angle(int servo_num, int angle) {
   if (angle < servo_min_angle[servo_num]) {
-    web_send_event("lua_output", "Servo limit " + String(servo_min_angle[servo_num]) + " reached for joint " + String(servo_num));
+    web_send("log", "Servo limit " + String(servo_min_angle[servo_num]) + " reached for joint " + String(servo_num));
     angle = servo_min_angle[servo_num];
   } else if (angle > servo_max_angle[servo_num]) {
-    web_send_event("lua_output", "Servo limit " + String(servo_max_angle[servo_num]) + " reached for joint " + String(servo_num));
+    web_send("log", "Servo limit " + String(servo_max_angle[servo_num]) + " reached for joint " + String(servo_num));
     angle = servo_max_angle[servo_num];
   }
 

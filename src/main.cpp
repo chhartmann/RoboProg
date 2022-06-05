@@ -1,13 +1,16 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <SPIFFS.h>
+#include <WString.h>
 #include <ArduinoOTA.h>
+
 #include <ArduinoJson.h>
 
 #include <ros_interface.h>
 #include <web_interface.h>
 #include <script_interface.h>
 #include <servo_handler.h>
+#include <qemu_eth.h>
 #include <config.h>
 
 #if __has_include("wifi_secrets.h")
@@ -23,7 +26,7 @@ void setupOta(const char* hostname) {
       else // U_SPIFFS
         type = "filesystem";
       SPIFFS.end();
-      Serial.println("Start updating " + type);      
+      Serial.println("Start updating " + type);
     })
     .onEnd([]() {
       Serial.println("\nEnd");
@@ -70,17 +73,23 @@ void setup() {
     }
 #endif
 
+#ifdef USE_ETH_NOT_WIFI
+  Serial.println("Starting ethernet...");
+  eth_start();
+#else
   WiFi.setHostname(configDoc[wifi_hostname_key]);
 
   if (configDoc[wifi_ssid_key] == "") {
     WiFi.softAP("RobotProg");
   } else {
     // Wifi is startet in ros_setup()
-    ros_setup(configDoc);
+    ros_setup(configDoc); // TODO use ros also with eth
   }
 
+ setupOta(configDoc[wifi_hostname_key]);
+#endif
+
   web_setup();
-  setupOta(configDoc[wifi_hostname_key]);
   servo_setup(configDoc);
   script_setup();
 
@@ -109,7 +118,9 @@ void loop() {
     }
     if (publish_joint_pos) {
       String joint_pos_json = get_joint_angles_as_json();
-      web_send_event("joint_pos", joint_pos_json);
+      web_send("pos", joint_pos_json);
       Serial.println("Web event: " + joint_pos_json);
     }
+
+    delay(10); // necessary for watchdog reset
 }
