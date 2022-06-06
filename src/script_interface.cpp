@@ -1,4 +1,10 @@
-#include <SPIFFS.h>
+#include <string>
+#include <fstream>
+#include <streambuf>
+
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <ArduinoJson.h>
 #include <config.h>
 #include <script_interface.h>
@@ -13,19 +19,19 @@ extern "C" {
 
 lua_State* luaState;
 TaskHandle_t luaTaskHandle = NULL;
-String luaScript;
+std::string luaScript;
 
 static void add_json_to_table(lua_State *lua_state, JsonVariant& val);
 
 void luaTaskFunc(void * parameter){
   web_send("log", "Lua task started");
-  String result;
+  std::string result;
   if (luaL_dostring(luaState, luaScript.c_str())) {
-    result += "# lua error:\n" + String(lua_tostring(luaState, -1));
+    result += "# lua error:\n" + std::string(lua_tostring(luaState, -1));
     lua_pop(luaState, 1);
   }
   web_send("log", "Lua task finished");
-  Serial.println(result);
+//  Serial.println(result);
   web_send("log", result);
   luaTaskHandle = NULL;
   vTaskDelete(NULL);
@@ -57,39 +63,39 @@ static int lua_set_joint_angles(lua_State *lua_state) {
 static int lua_wrapper_pinMode(lua_State *lua_state) {
   int a = luaL_checkinteger(lua_state, 1);
   int b = luaL_checkinteger(lua_state, 2);
-  pinMode(a, b);
+//  pinMode(a, b);
   return 0;
 }
 
 static int lua_wrapper_digitalWrite(lua_State *lua_state) {
   int a = luaL_checkinteger(lua_state, 1);
   int b = luaL_checkinteger(lua_state, 2);
-  digitalWrite(a, b);
+//  digitalWrite(a, b);
   return 0;
 }
 
 static int lua_wrapper_digitalRead(lua_State *lua_state) {
   int a = luaL_checkinteger(lua_state, 1);
-  int val = digitalRead(a);
+  int val = 0; //digitalRead(a);
   lua_pushnumber(lua_state, val);
   return 1;
 }
 
 static int lua_wrapper_delay(lua_State *lua_state) {
   int a = luaL_checkinteger(lua_state, 1);
-  delay(a);
+//  delay(a);
   return 0;
 }
 
 static int lua_log_serial(lua_State *lua_state) {
   const char* a = luaL_checkstring(lua_state, 1);
-  Serial.print(a);
+//  Serial.print(a);
   return 0;
 }
 
 static int lua_log_web(lua_State *lua_state) {
   const char* a = luaL_checkstring(lua_state, 1);
-  String msg = a;
+  std::string msg = a;
   web_send("log", msg);
   return 0;
 }
@@ -127,16 +133,16 @@ static void add_json_to_table(lua_State *lua_state, JsonVariant& val) {
   } else if (val.is<bool>()) {
     lua_pushboolean(lua_state, val.as<bool>());
   } else {
-    Serial.println("Unknown type in config.json");
+//TODO    Serial.println("Unknown type in config.json");
   }
 }
 
 static int lua_get_config(lua_State *lua_state) {
   ConfigJsonDoc configDoc;
-  File configFile = SPIFFS.open("/config.json", "r");
-  deserializeJson(configDoc, configFile);
-  configFile.close();
-
+  std::ifstream t("/spiffs/config.json");
+  std::string configFile((std::istreambuf_iterator<char>(t)),
+                  std::istreambuf_iterator<char>());
+  DeserializationError jsonError = deserializeJson(configDoc, configFile);
   lua_newtable(lua_state);
   JsonVariant config = configDoc.as<JsonVariant>();
   add_json_to_table(lua_state, config);

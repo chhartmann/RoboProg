@@ -1,7 +1,6 @@
 //#include <ESPAsyncWebServer.h>
 //#include <AsyncJson.h>
 #include <ArduinoJson.h>
-#include <SPIFFS.h>
 #include <cstdint>
 #include <esp_http_server.h>
 #include <stdio.h>
@@ -70,7 +69,7 @@ esp_err_t download_get_handler(httpd_req_t *req) {
   FILE* file = fopen(filename.c_str(), "r");
   if (!file) {
     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File does not exist");
-    Serial.printf("File %s not found\n", filename.c_str());
+//TODO    Serial.printf("File %s not found\n", filename.c_str());
     return ESP_FAIL;
   } else {
 
@@ -106,7 +105,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
   } else {
     (void)fwrite(content.c_str(), 1, content.length(), file);
     fclose(file);
-    Serial.printf("File %s uploaded successfully\n", filename.c_str());
+//TODO    Serial.printf("File %s uploaded successfully\n", filename.c_str());
     httpd_resp_set_hdr(req, "Connection", "close");
   httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
@@ -145,13 +144,13 @@ esp_err_t rest_stop_script_handler(httpd_req_t *req) {
 
 esp_err_t rest_reset_handler(httpd_req_t *req) {
   httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
-  Serial.println("Restarting...");
-  ESP.restart();
+//TODO  Serial.println("Restarting...");
+//TODO  ESP.restart();
   return ESP_OK;
 }
 
 esp_err_t rest_get_joint_angles_handler(httpd_req_t *req) {
-  String resp = get_joint_angles_as_json();
+  std::string resp = get_joint_angles_as_json();
   httpd_resp_set_type(req, "application/json");
   httpd_resp_send(req, resp.c_str(), HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
@@ -159,16 +158,16 @@ esp_err_t rest_get_joint_angles_handler(httpd_req_t *req) {
 
 esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
   StaticJsonDocument<512> doc;
-  doc["CPU Freq MHz"] = ESP.getCpuFreqMHz();
-  doc["Chip Model"] = ESP.getChipModel();
-  doc["Flash Chip Size"] = ESP.getFlashChipSize();
-  doc["Heap Size"] = ESP.getHeapSize();
-  doc["Free Heap"] = ESP.getFreeHeap();
-  doc["Min Free Heap"] = ESP.getMinFreeHeap();
+  // doc["CPU Freq MHz"] = ESP.getCpuFreqMHz();
+  // doc["Chip Model"] = ESP.getChipModel();
+  // doc["Flash Chip Size"] = ESP.getFlashChipSize();
+  // doc["Heap Size"] = ESP.getHeapSize();
+  // doc["Free Heap"] = ESP.getFreeHeap();
+  // doc["Min Free Heap"] = ESP.getMinFreeHeap();
 
   // Spiffs
-  doc["Spiffs Total Bytes"] = SPIFFS.totalBytes();
-  doc["Spiffs Used Bytes"] = SPIFFS.usedBytes();
+  // doc["Spiffs Total Bytes"] = SPIFFS.totalBytes();
+  // doc["Spiffs Used Bytes"] = SPIFFS.usedBytes();
 
   // Free Rtos
   TaskStatus_t *pxTaskStatusArray;
@@ -187,7 +186,7 @@ esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
       vPortFree( pxTaskStatusArray );
    }
 
-  String resp;
+  std::string resp;
   serializeJson(doc, resp);
 //      Serial.println(response);
   httpd_resp_set_type(req, "application/json");
@@ -198,13 +197,13 @@ esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
 static esp_err_t ws_handler(httpd_req_t *req)
 {
     if (req->method == HTTP_GET) {
-        Serial.println("Websocket connection established");
+//TODO        Serial.println("Websocket connection established");
         ws_fd = httpd_req_to_sockfd(req);
         ws_connected = true;
         return ESP_OK;
     }
 
-    Serial.println("Websocket unexpected method");
+//TODO    Serial.println("Websocket unexpected method");
     return ESP_FAIL;
 }
 
@@ -291,7 +290,7 @@ void web_setup() {
 
 static void ws_async_send(void *arg)
 {
-  String *data = (String *)arg;
+  std::string *data = (std::string*)arg;
   if (ws_connected) {
     httpd_ws_frame_t ws_pkt;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
@@ -300,19 +299,19 @@ static void ws_async_send(void *arg)
     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
     httpd_ws_send_frame_async(server, ws_fd, &ws_pkt);
   }
-  free(data);
+  delete data;
 }
 
-void web_send(const char* type, String data) {
+void web_send(const char* type, std::string data) {
   if (ws_connected) {
     const size_t CAPACITY = JSON_OBJECT_SIZE(2);
     StaticJsonDocument<CAPACITY> doc;
     JsonObject object = doc.to<JsonObject>();
     object["type"] = type;
     object["data"] = data.c_str();
-    String json;
+    std::string json;
     serializeJson(doc, json);
-    void* arg = new String(json);
+    void* arg = new std::string(json);
     (void)httpd_queue_work(server, ws_async_send, arg);
   }
 }

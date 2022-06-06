@@ -1,9 +1,10 @@
-#include <Arduino.h>
-#include <WiFi.h>
-#include <SPIFFS.h>
-#include <WString.h>
-#include <ArduinoOTA.h>
+#include <string>
+#include <fstream>
+#include <streambuf>
 
+#include "esp_err.h"
+#include "esp_log.h"
+#include "esp_spiffs.h"
 #include <ArduinoJson.h>
 
 #include <ros_interface.h>
@@ -13,56 +14,92 @@
 #include <qemu_eth.h>
 #include <config.h>
 
+const char* TAG="rpg";
+void setup();
+void loop();
+
+extern "C" {
+void app_main() {
+  setup();
+  loop();
+}
+}
+
 #if __has_include("wifi_secrets.h")
 #include "wifi_secrets.h"
 #endif
 
-void setupOta(const char* hostname) {
-  ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
-      SPIFFS.end();
-      Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    })
-    .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
+// void setupOta(const char* hostname) {
+//   ArduinoOTA
+//     .onStart([]() {
+//       String type;
+//       if (ArduinoOTA.getCommand() == U_FLASH)
+//         type = "sketch";
+//       else // U_SPIFFS
+//         type = "filesystem";
+//       SPIFFS.end();
+//       Serial.println("Start updating " + type);
+//     })
+//     .onEnd([]() {
+//       Serial.println("\nEnd");
+//     })
+//     .onProgress([](unsigned int progress, unsigned int total) {
+//       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+//     })
+//     .onError([](ota_error_t error) {
+//       Serial.printf("Error[%u]: ", error);
+//       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+//       else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+//       else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+//       else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+//       else if (error == OTA_END_ERROR) Serial.println("End Failed");
+//     });
 
-  ArduinoOTA.setHostname(hostname);
-  ArduinoOTA.begin();
+//   ArduinoOTA.setHostname(hostname);
+//   ArduinoOTA.begin();
+// }
+
+void setup_spiffs() {
+    ESP_LOGI(TAG, "Initializing SPIFFS");
+
+    esp_vfs_spiffs_conf_t conf = {
+      .base_path = "/spiffs",
+      .partition_label = NULL,
+      .max_files = 5,
+      .format_if_mount_failed = true
+    };
+
+    // Use settings defined above to initialize and mount SPIFFS filesystem.
+    // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
+    esp_err_t ret = esp_vfs_spiffs_register(&conf);
+
+    if (ret != ESP_OK) {
+        if (ret == ESP_FAIL) {
+            ESP_LOGE(TAG, "Failed to mount or format filesystem");
+        } else if (ret == ESP_ERR_NOT_FOUND) {
+            ESP_LOGE(TAG, "Failed to find SPIFFS partition");
+        } else {
+            ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+        }
+        return;
+    }
 }
 
-
 void setup() {
-   Serial.begin(115200);
+  //  Serial.begin(115200);
 
-   if(!SPIFFS.begin()){
-      while(1);
-   }
+  setup_spiffs();
 
   // load config from file
   ConfigJsonDoc configDoc;
-  File configFile = SPIFFS.open("/config.json", "r");
+  std::ifstream t("/spiffs/config.json");
+  std::string configFile((std::istreambuf_iterator<char>(t)),
+                  std::istreambuf_iterator<char>());
   DeserializationError jsonError = deserializeJson(configDoc, configFile);
-  configFile.close();
+
   if (jsonError) {
-    Serial.printf("deserializeJson() failed (%s) for config file\n", jsonError.c_str());
-    serializeJsonPretty(configDoc, Serial);
+    ESP_LOGE(TAG, "deserializeJson() failed (%s) for config file\n", jsonError.c_str());
+//    serializeJsonPretty(configDoc, Serial);
     while(1);
   }
 
@@ -74,19 +111,19 @@ void setup() {
 #endif
 
 #ifdef USE_ETH_NOT_WIFI
-  Serial.println("Starting ethernet...");
+  ESP_LOGI(TAG, "Starting ethernet...");
   eth_start();
 #else
-  WiFi.setHostname(configDoc[wifi_hostname_key]);
+//   WiFi.setHostname(configDoc[wifi_hostname_key]);
 
-  if (configDoc[wifi_ssid_key] == "") {
-    WiFi.softAP("RobotProg");
-  } else {
-    // Wifi is startet in ros_setup()
-    ros_setup(configDoc); // TODO use ros also with eth
-  }
+//   if (configDoc[wifi_ssid_key] == "") {
+//     WiFi.softAP("RobotProg");
+//   } else {
+//     // Wifi is startet in ros_setup()
+//     ros_setup(configDoc); // TODO use ros also with eth
+//   }
 
- setupOta(configDoc[wifi_hostname_key]);
+//  setupOta(configDoc[wifi_hostname_key]);
 #endif
 
   web_setup();
@@ -94,17 +131,19 @@ void setup() {
   script_setup();
 
   if (configDoc[autostart_script_key] == true) {
-    File scriptFile = SPIFFS.open("/script.lua", "r");
-    String script = scriptFile.readString();
-    scriptFile.close();
-    script_run(script.c_str());
+    std::ifstream t("/spiffs/script.lua");
+    std::string luaScript((std::istreambuf_iterator<char>(t)),
+                    std::istreambuf_iterator<char>());
+    script_run(luaScript.c_str());
   }
+
+  while(1) loop();
 }
 
 void loop() {
     static int prev_joint_pos[num_servos] = {0};
 
-    ArduinoOTA.handle();
+    // ArduinoOTA.handle();
     ros_loop();
 
     // if a servo has changed position, send it to the frontend
@@ -117,10 +156,10 @@ void loop() {
       }
     }
     if (publish_joint_pos) {
-      String joint_pos_json = get_joint_angles_as_json();
+      std::string joint_pos_json = get_joint_angles_as_json();
       web_send("pos", joint_pos_json);
-      Serial.println("Web event: " + joint_pos_json);
+      // Serial.println("Web event: " + joint_pos_json);
     }
 
-    delay(10); // necessary for watchdog reset
+//    delay(10); // necessary for watchdog reset
 }
