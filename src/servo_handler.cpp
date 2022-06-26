@@ -1,6 +1,5 @@
 #include <servo_handler.h>
 #include <web_interface.h>
-//#include <ESP32Servo.h>
 
 void set_servo_angle(int servo_num, int angle);
 

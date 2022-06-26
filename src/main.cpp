@@ -5,6 +5,11 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
+#include "esp_wifi.h"
+
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
 #include <ArduinoJson.h>
 
 #include <ros_interface.h>
@@ -66,7 +71,7 @@ void setup_spiffs() {
       .base_path = "/spiffs",
       .partition_label = NULL,
       .max_files = 5,
-      .format_if_mount_failed = true
+      .format_if_mount_failed = false
     };
 
     // Use settings defined above to initialize and mount SPIFFS filesystem.
@@ -97,6 +102,8 @@ void setup() {
                   std::istreambuf_iterator<char>());
   DeserializationError jsonError = deserializeJson(configDoc, configFile);
 
+//  ESP_LOGI(TAG, "Config read:\n %s", configFile.c_str());
+
   if (jsonError) {
     ESP_LOGE(TAG, "deserializeJson() failed (%s) for config file\n", jsonError.c_str());
 //    serializeJsonPretty(configDoc, Serial);
@@ -111,7 +118,11 @@ void setup() {
 #endif
 
 #ifdef USE_ETH_NOT_WIFI
-  ESP_LOGI(TAG, "Starting ethernet...");
+
+  esp_log_level_set("esp_eth*", ESP_LOG_VERBOSE);
+
+
+  ESP_LOGI(TAG, "Starting ethernet");
   eth_start();
 #else
 //   WiFi.setHostname(configDoc[wifi_hostname_key]);
@@ -126,11 +137,16 @@ void setup() {
 //  setupOta(configDoc[wifi_hostname_key]);
 #endif
 
+  ESP_LOGI(TAG, "Starting http server");
   web_setup();
+
   servo_setup(configDoc);
   script_setup();
 
+  ESP_LOGI(TAG, "Setup finished");
+
   if (configDoc[autostart_script_key] == true) {
+    ESP_LOGI(TAG, "Autostart lua script");
     std::ifstream t("/spiffs/script.lua");
     std::string luaScript((std::istreambuf_iterator<char>(t)),
                     std::istreambuf_iterator<char>());
@@ -161,5 +177,5 @@ void loop() {
       // Serial.println("Web event: " + joint_pos_json);
     }
 
-//    delay(10); // necessary for watchdog reset
+    vTaskDelay( 10 / portTICK_PERIOD_MS); // necessary for watchdog reset
 }
