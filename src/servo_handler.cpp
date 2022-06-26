@@ -1,14 +1,11 @@
+#include <esp_log.h>
+#include <iot_servo.h> // from https://github.com/espressif/esp-iot-solution.git
 #include <servo_handler.h>
 #include <web_interface.h>
 
 void set_servo_angle(int servo_num, int angle);
 
-// Servo servo1;
-// Servo servo2;
-// Servo servo3;
-// Servo servo4;
-
-// Servo* const servos[num_servos] = {&servo1, &servo2, &servo3, &servo4};
+static const char *TAG = "servo";
 static const int servo_pins[num_servos] = {15, 16, 14, 4};
 
 static int servo_min_angle[num_servos] = {0, 0, 0, 0};
@@ -39,11 +36,34 @@ int get_joint_angle(int joint_id) {
 
 
 void servo_setup(ConfigJsonDoc& config) {
-  for (int i = 0; i < num_servos; i++) {
 #ifndef USE_ETH_NOT_WIFI
-    // this crashes qemu
-//    servos[i]->attach(servo_pins[i]);
+  servo_config_t servo_cfg = {
+      .max_angle = 180,
+      .min_width_us = 500,
+      .max_width_us = 2500,
+      .freq = 50,
+      .timer_number = LEDC_TIMER_0,
+      .channels = {
+          .servo_pin = {
+              servo_pins[0],
+              servo_pins[1],
+              servo_pins[2],
+              servo_pins[3],
+          },
+          .ch = {
+              LEDC_CHANNEL_0,
+              LEDC_CHANNEL_1,
+              LEDC_CHANNEL_2,
+              LEDC_CHANNEL_3,
+          },
+      },
+      .channel_number = 4,
+  };
+  iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg);
+
 #endif
+
+  for (int i = 0; i < num_servos; i++) {
     joint_min_angle[i] = config["limits"][i]["min"];
     joint_max_angle[i] = config["limits"][i]["max"];
     joint_offset[i] = config["offset"][i];
@@ -64,9 +84,10 @@ void set_servo_angle(int servo_num, int angle) {
     angle = servo_max_angle[servo_num];
   }
 
-//  servos[servo_num]->write(angle);
+  iot_servo_write_angle(LEDC_LOW_SPEED_MODE, servo_num, angle);
   servo_cur_angle[servo_num] = angle;
-//  Serial.println("Servo angle / Joint Angle " + String(servo_num) + " : " + String(angle) + " / " + String(get_joint_angle(servo_num)));
+
+  ESP_LOGI(TAG, "Servo angle / Joint Angle %i %i / %i", servo_num, angle, get_joint_angle(servo_num));
 }
 
 std::string get_joint_angles_as_json() {
