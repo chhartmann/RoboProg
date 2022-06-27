@@ -76,7 +76,6 @@ static int lua_wrapper_pinMode(lua_State *lua_state) {
   io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
 
   if (b == 0) { // input
-    gpio_config_t io_conf = {};
     io_conf.mode = GPIO_MODE_INPUT;
   } else { // output
     io_conf.mode = GPIO_MODE_OUTPUT;
@@ -103,7 +102,7 @@ static int lua_wrapper_digitalRead(lua_State *lua_state) {
 
 static int lua_wrapper_delay(lua_State *lua_state) {
   int a = luaL_checkinteger(lua_state, 1);
-  vTaskDelay( 10 / portTICK_PERIOD_MS);
+  vTaskDelay( a / portTICK_PERIOD_MS);
   return 0;
 }
 
@@ -162,7 +161,7 @@ static int lua_get_config(lua_State *lua_state) {
   std::ifstream t("/spiffs/config.json");
   std::string configFile((std::istreambuf_iterator<char>(t)),
                   std::istreambuf_iterator<char>());
-  DeserializationError jsonError = deserializeJson(configDoc, configFile);
+  (void)deserializeJson(configDoc, configFile);
   lua_newtable(lua_state);
   JsonVariant config = configDoc.as<JsonVariant>();
   add_json_to_table(lua_state, config);

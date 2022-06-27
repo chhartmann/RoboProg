@@ -1,6 +1,9 @@
+#include <esp_log.h>
+#include <esp_spiffs.h>
+#include <esp_http_server.h>
+
 #include <ArduinoJson.h>
 #include <cstdint>
-#include <esp_http_server.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -10,6 +13,8 @@
 #include <web_interface.h>
 #include <script_interface.h>
 #include <servo_handler.h>
+
+static const char *TAG = "httpd";
 
 httpd_handle_t server = NULL;
 bool ws_connected = false;
@@ -67,7 +72,7 @@ esp_err_t download_get_handler(httpd_req_t *req) {
   FILE* file = fopen(filename.c_str(), "r");
   if (!file) {
     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File does not exist");
-//TODO    Serial.printf("File %s not found\n", filename.c_str());
+    ESP_LOGE(TAG, "File %s not found", filename.c_str());
     return ESP_FAIL;
   } else {
 
@@ -103,7 +108,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
   } else {
     (void)fwrite(content.c_str(), 1, content.length(), file);
     fclose(file);
-//TODO    Serial.printf("File %s uploaded successfully\n", filename.c_str());
+    ESP_LOGI(TAG, "File %s uploaded successfully", filename.c_str());
     httpd_resp_set_hdr(req, "Connection", "close");
   httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
@@ -142,8 +147,8 @@ esp_err_t rest_stop_script_handler(httpd_req_t *req) {
 
 esp_err_t rest_reset_handler(httpd_req_t *req) {
   httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
-//TODO  Serial.println("Restarting...");
-//TODO  ESP.restart();
+  ESP_LOGI(TAG, "Restarting ESP...");
+  esp_restart();
   return ESP_OK;
 }
 
@@ -156,16 +161,16 @@ esp_err_t rest_get_joint_angles_handler(httpd_req_t *req) {
 
 esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
   StaticJsonDocument<512> doc;
-  // doc["CPU Freq MHz"] = ESP.getCpuFreqMHz();
-  // doc["Chip Model"] = ESP.getChipModel();
-  // doc["Flash Chip Size"] = ESP.getFlashChipSize();
-  // doc["Heap Size"] = ESP.getHeapSize();
-  // doc["Free Heap"] = ESP.getFreeHeap();
-  // doc["Min Free Heap"] = ESP.getMinFreeHeap();
+
+  // Heap
+  doc["Free Heap"] = esp_get_free_heap_size();
+  doc["Min Free Heap"] = esp_get_minimum_free_heap_size();
 
   // Spiffs
-  // doc["Spiffs Total Bytes"] = SPIFFS.totalBytes();
-  // doc["Spiffs Used Bytes"] = SPIFFS.usedBytes();
+  size_t total_bytes, used_bytes;
+  (void)esp_spiffs_info("spiffs", &total_bytes, &used_bytes);
+  doc["Spiffs Total Bytes"] = total_bytes;
+  doc["Spiffs Used Bytes"] = used_bytes;
 
   // Free Rtos
   TaskStatus_t *pxTaskStatusArray;
@@ -186,7 +191,7 @@ esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
 
   std::string resp;
   serializeJson(doc, resp);
-//      Serial.println(response);
+//  ESP_LOGI(TAG, "%s", response.c_str());
   httpd_resp_set_type(req, "application/json");
   httpd_resp_send(req, resp.c_str(), HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
@@ -195,15 +200,18 @@ esp_err_t rest_read_diagnosis_handler(httpd_req_t *req) {
 static esp_err_t ws_handler(httpd_req_t *req)
 {
     if (req->method == HTTP_GET) {
-//TODO        Serial.println("Websocket connection established");
-        ws_fd = httpd_req_to_sockfd(req);
-        ws_connected = true;
-        return ESP_OK;
+      ESP_LOGI(TAG, "Websocket connection established");
+      ws_fd = httpd_req_to_sockfd(req);
+      ws_connected = true;
+      return ESP_OK;
     }
 
-//TODO    Serial.println("Websocket unexpected method");
+    ESP_LOGI(TAG, "Websocket unexpected method");
     return ESP_FAIL;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 void web_setup() {
 
@@ -285,6 +293,8 @@ void web_setup() {
   };
   httpd_register_uri_handler(server, &file_download);
 }
+
+#pragma GCC diagnostic pop
 
 static void ws_async_send(void *arg)
 {

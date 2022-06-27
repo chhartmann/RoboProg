@@ -1,12 +1,13 @@
 #include <esp_log.h>
 #include <iot_servo.h> // from https://github.com/espressif/esp-iot-solution.git
 #include <servo_handler.h>
+#include <driver/gpio.h>
 #include <web_interface.h>
 
 void set_servo_angle(int servo_num, int angle);
 
 static const char *TAG = "servo";
-static const int servo_pins[num_servos] = {15, 16, 14, 4};
+static const gpio_num_t servo_pins[num_servos] = {GPIO_NUM_15, GPIO_NUM_16, GPIO_NUM_14, GPIO_NUM_4};
 
 static int servo_min_angle[num_servos] = {0, 0, 0, 0};
 static int servo_max_angle[num_servos] = {180, 180, 180, 180};
