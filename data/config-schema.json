@@ -65,10 +65,12 @@
       },
       "Wifi-SSID": {
         "type": "string",
+        "maxLength" : 31,
         "description": "WiFi SSID"
       },
       "Wifi-Password": {
         "type": "string",
+        "maxLength" : 63,
         "description": "WiFi Password"
       },
       "Hostname": {

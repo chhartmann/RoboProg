@@ -5,7 +5,6 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
-#include "esp_wifi.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -17,6 +16,7 @@
 #include <script_interface.h>
 #include <servo_handler.h>
 #include <qemu_eth.h>
+#include <wifi.h>
 #include <config.h>
 
 const char* TAG="rpg";
@@ -106,7 +106,6 @@ void setup() {
 
   if (jsonError) {
     ESP_LOGE(TAG, "deserializeJson() failed (%s) for config file\n", jsonError.c_str());
-//    serializeJsonPretty(configDoc, Serial);
     while(1);
   }
 
@@ -125,11 +124,15 @@ void setup() {
   ESP_LOGI(TAG, "Starting ethernet");
   eth_start();
 #else
-//   WiFi.setHostname(configDoc[wifi_hostname_key]);
+   if (configDoc[wifi_ssid_key] == "") {
+//TODO     WiFi.softAP("RobotProg");
+   } else {
+    start_wifi(string& ssid, string& password);
+    esp_err_t ret = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA ,"RobotProg");
+    if (ret != ESP_OK ) {
+      ESP_LOGE(MAIN_TAG,"failed to set hostname:%d",ret);
+    }
 
-//   if (configDoc[wifi_ssid_key] == "") {
-//     WiFi.softAP("RobotProg");
-//   } else {
 //     // Wifi is startet in ros_setup()
 //     ros_setup(configDoc); // TODO use ros also with eth
 //   }
