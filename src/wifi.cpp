@@ -107,4 +107,9 @@ void start_wifi(std::string ssid, std::string password)
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 
    wifi_init_sta(ssid.c_str(), password.c_str());
+
+   ret = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA ,"RobotProg");
+   if (ret != ESP_OK ) {
+     ESP_LOGE(TAG,"failed to set hostname:%d",ret);
+   }
 }

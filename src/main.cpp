@@ -127,11 +127,8 @@ void setup() {
    if (configDoc[wifi_ssid_key] == "") {
 //TODO     WiFi.softAP("RobotProg");
    } else {
-    start_wifi(string& ssid, string& password);
-    esp_err_t ret = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA ,"RobotProg");
-    if (ret != ESP_OK ) {
-      ESP_LOGE(MAIN_TAG,"failed to set hostname:%d",ret);
-    }
+      start_wifi(configDoc[wifi_ssid_key], configDoc[wifi_pwd_key]);
+   }
 
 //     // Wifi is startet in ros_setup()
 //     ros_setup(configDoc); // TODO use ros also with eth
