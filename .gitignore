@@ -4,8 +4,11 @@
 main/wifi_secrets.h
 
 .config
+.cache
 *.o
 *.pyc
+
+sdkconfig.old
 
 # gtags
 GTAGS
