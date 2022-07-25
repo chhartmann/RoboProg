@@ -82,8 +82,8 @@ ENV IDF_CCACHE_ENABLE=1
 
 # from https://github.com/espressif/vscode-esp-idf-extension/blob/master/templates/.devcontainer/Dockerfile
 
-RUN apt-get update \
-  && apt install -y -q \
+RUN sudo apt-get update \
+  && sudo apt install -y -q \
   cmake \
   git \
   hwdata \
@@ -93,7 +93,7 @@ RUN apt-get update \
   linux-tools-5.4.0-77-generic \
   && rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/5.4.0-77-generic/usbip 20
+RUN sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/5.4.0-77-generic/usbip 20
 
 # QEMU
 ENV QEMU_REL=esp-develop-20210220
@@ -106,9 +106,11 @@ ENV LANG=C.UTF-8
 
 RUN wget --no-verbose ${QEMU_URL} \
   && echo "${QEMU_SHA256} *${QEMU_DIST}" | sha256sum --check --strict - \
-  && tar -xf $QEMU_DIST -C /opt \
+  && sudo tar -xf $QEMU_DIST -C /opt \
   && rm ${QEMU_DIST}
 
 ENV PATH=/opt/qemu/bin:${PATH}
+
+RUN sudo chown -R ${USER} /opt/qemu
 
 RUN echo $($IDF_PATH/tools/idf_tools.py export) >> $HOME/.bashrc
