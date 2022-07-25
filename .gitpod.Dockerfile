@@ -91,7 +91,7 @@ RUN sudo apt-get update \
   libnuma1 \
   libpixman-1-0 \
   linux-tools-5.4.0-77-generic \
-  && rm -rf /var/lib/apt/lists/*
+  && sudo rm -rf /var/lib/apt/lists/*
 
 RUN sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/5.4.0-77-generic/usbip 20
 
