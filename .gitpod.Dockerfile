@@ -114,3 +114,6 @@ ENV PATH=/opt/qemu/bin:${PATH}
 RUN sudo chown -R ${USER} /opt/qemu
 
 RUN echo $($IDF_PATH/tools/idf_tools.py export) >> $HOME/.bashrc
+
+# own stuff
+RUN pip install future
