@@ -4,4 +4,3 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 add_compile_definitions(LUA_32BITS)
 
 project(main)
-
