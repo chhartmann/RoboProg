@@ -16,23 +16,20 @@ http://www.eezyrobots.it/eba_mk1.html
 # How to build
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chhartmann/RoboProg)
 
-In gitpod compile firmware with "platformio run -e esp32dev" and build spiffs.bin with "platformio run -t buildfs -e esp32dev". You can download the .bin files in the IDE under .pio/esp32dev and flash them with ESP32 flash tool (https://www.espressif.com/en/support/download/other-tools).
+In gitpod compile firmware with "idf.py build".
 
-or
-
-Use vscode with platform.io plugin and use the defined platform.io project tasks to build and flash everything you need.
 
 # How to debug with qemu:
-* Build full image for qemu: "platformio run -t qemu-image -e esp32dev_qemu"
+* Build full image for qemu
 * Run qemu: ctrl+P task run qemu
 * Set breakpoint
 * Start debugger: F5
 
 
 # TODO
-* use ros also with open-eth
+* integrate ros again
 * build release bin file with github action, which then can be easily flashed with ESP32 flash tool
-* tests with robotframework and qemu
+* automated tests with qemu
 
 # REST API
 * /rest/get_joint_angles / HTTP_GET / application/json

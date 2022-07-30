@@ -5,36 +5,14 @@
    "version": "0.2.0",
    "configurations": [
       {
-         "name": "Debug - attach esp32dev_qemu",
+         "name": "Debug with qemu",
          "type": "gdb",
-         "executable": "${workspaceRoot}/.pio/build/esp32dev_qemu/firmware.elf",
+         "executable": "${workspaceRoot}/build/main.elf",
          "request": "attach",
          "target": "localhost:1234",
          "cwd": "${workspaceRoot}",
          "remote": true,
-         "gdbpath": "${env:HOME}/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-gdb",
-         "valuesFormatting": "parseText"
-      },
-      {
-         "name": "Debug - panic on pts2 esp32dev_qemu",
-         "type": "gdb",
-         "executable": "${workspaceRoot}/.pio/build/esp32dev_qemu/firmware.elf",
-         "request": "attach",
-         "target": "/dev/pts/2",
-         "cwd": "${workspaceRoot}",
-         "remote": true,
-         "gdbpath": "${env:HOME}/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-gdb",
-         "valuesFormatting": "parseText"
-      },
-      {
-         "name": "Debug - panic on pts3 esp32dev_qemu",
-         "type": "gdb",
-         "executable": "${workspaceRoot}/.pio/build/esp32dev_qemu/firmware.elf",
-         "request": "attach",
-         "target": "/dev/pts/3",
-         "cwd": "${workspaceRoot}",
-         "remote": true,
-         "gdbpath": "${env:HOME}/.platformio/packages/toolchain-xtensa-esp32/bin/xtensa-esp32-elf-gdb",
+         "gdbpath": "xtensa-esp32-elf-gdb",
          "valuesFormatting": "parseText"
       }
    ]

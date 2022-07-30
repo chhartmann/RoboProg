@@ -1,4 +1,5 @@
 {
    "cmake.configureOnOpen": true,
-   "idf.adapterTargetName": "esp32"
+   "idf.adapterTargetName": "esp32",
+   "idf.pythonBinPath": "/opt/esp/python_env/idf4.4_py3.8_env/bin/python"
 }
