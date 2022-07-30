@@ -116,4 +116,4 @@ RUN sudo chown -R ${USER} /opt/qemu
 RUN echo $($IDF_PATH/tools/idf_tools.py export) >> $HOME/.bashrc
 
 # own stuff
-RUN pip install future
+#RUN pip install future
