@@ -5,6 +5,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
+#include "esp_partition.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -65,11 +66,26 @@ void app_main() {
 // }
 
 void setup_spiffs() {
-    ESP_LOGI(TAG, "Initializing SPIFFS");
+  ESP_LOGI(TAG, "Initializing SPIFFS");
+
+  esp_partition_type_t type = ESP_PARTITION_TYPE_DATA;
+  esp_partition_subtype_t subtype = ESP_PARTITION_SUBTYPE_DATA_SPIFFS;
+  const char* name ="storage";
+  const esp_partition_t * part  = esp_partition_find_first(type, subtype, name);
+
+  if (part != NULL) {
+      ESP_LOGI(TAG, "found partition '%s' at offset 0x%x with size 0x%x", part->label, part->address, part->size);
+  } else {
+      ESP_LOGE(TAG, "partition not found!");
+  }
+
+  ESP_LOGI(TAG, "Formating data partition...");
+  esp_err_t format_ret = esp_spiffs_format("storage");
+  ESP_LOGI(TAG, "%s", format_ret == ESP_OK ? "success" : "failed");
 
     esp_vfs_spiffs_conf_t conf = {
       .base_path = "/spiffs",
-      .partition_label = NULL,
+      .partition_label = "storage",
       .max_files = 5,
       .format_if_mount_failed = false
     };
