@@ -19,7 +19,7 @@ http://www.eezyrobots.it/eba_mk1.html
 In gitpod compile firmware with "idf.py build".
 
 
-# How to debug with qemu:
+# How to debug with qemu
 * Build full image for qemu: ctrl*P task build and run qemu image
 * Now you can watch the log messages and start debugging
 
