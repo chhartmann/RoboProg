@@ -79,31 +79,27 @@ void setup_spiffs() {
       ESP_LOGE(TAG, "partition not found!");
   }
 
-  ESP_LOGI(TAG, "Formating data partition...");
-  esp_err_t format_ret = esp_spiffs_format("storage");
-  ESP_LOGI(TAG, "%s", format_ret == ESP_OK ? "success" : "failed");
+  esp_vfs_spiffs_conf_t conf = {
+    .base_path = "/spiffs",
+    .partition_label = "storage",
+    .max_files = 5,
+    .format_if_mount_failed = false
+  };
 
-    esp_vfs_spiffs_conf_t conf = {
-      .base_path = "/spiffs",
-      .partition_label = "storage",
-      .max_files = 5,
-      .format_if_mount_failed = false
-    };
+  // Use settings defined above to initialize and mount SPIFFS filesystem.
+  // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
+  esp_err_t ret = esp_vfs_spiffs_register(&conf);
 
-    // Use settings defined above to initialize and mount SPIFFS filesystem.
-    // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
-    esp_err_t ret = esp_vfs_spiffs_register(&conf);
-
-    if (ret != ESP_OK) {
-        if (ret == ESP_FAIL) {
-            ESP_LOGE(TAG, "Failed to mount or format filesystem");
-        } else if (ret == ESP_ERR_NOT_FOUND) {
-            ESP_LOGE(TAG, "Failed to find SPIFFS partition");
-        } else {
-            ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
-        }
-        return;
-    }
+  if (ret != ESP_OK) {
+      if (ret == ESP_FAIL) {
+          ESP_LOGE(TAG, "Failed to mount or format filesystem");
+      } else if (ret == ESP_ERR_NOT_FOUND) {
+          ESP_LOGE(TAG, "Failed to find SPIFFS partition");
+      } else {
+          ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+      }
+      return;
+  }
 }
 
 void setup() {
@@ -132,7 +128,7 @@ void setup() {
     }
 #endif
 
-#ifdef USE_ETH_NOT_WIFI
+#ifdef BUILD_FOR_QEMU
 
   esp_log_level_set("esp_eth*", ESP_LOG_VERBOSE);
 
@@ -140,6 +136,7 @@ void setup() {
   ESP_LOGI(TAG, "Starting ethernet");
   eth_start();
 #else
+  ESP_LOGI(TAG, "Starting wifi");
    if (configDoc[wifi_ssid_key] == "") {
 //TODO     WiFi.softAP("RobotProg");
    } else {

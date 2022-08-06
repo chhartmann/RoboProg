@@ -9,5 +9,18 @@
          "command": "./build_qemu.sh -s", // -s for gdb connection
          "problemMatcher": []
       },
-   ]
+      {
+         "label": "backtrace decoder",
+         "type": "shell",
+         "command": "xtensa-esp32-elf-addr2line -pfiaC -e build/main.elf ${input:param1}",
+         "problemMatcher": []
+      }
+   ],
+   "inputs": [
+      {
+          "id": "param1",
+          "description": "Paste Backtrace here",
+          "type": "promptString",
+      }
+  ]
 }

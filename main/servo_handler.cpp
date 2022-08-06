@@ -37,7 +37,7 @@ int get_joint_angle(int joint_id) {
 
 
 void servo_setup(ConfigJsonDoc& config) {
-#ifndef USE_ETH_NOT_WIFI
+#ifndef BUILD_FOR_QEMU
   servo_config_t servo_cfg = {
       .max_angle = 180,
       .min_width_us = 500,
