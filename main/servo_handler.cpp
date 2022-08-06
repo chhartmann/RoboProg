@@ -85,7 +85,9 @@ void set_servo_angle(int servo_num, int angle) {
     angle = servo_max_angle[servo_num];
   }
 
+#ifndef BUILD_FOR_QEMU
   iot_servo_write_angle(LEDC_LOW_SPEED_MODE, servo_num, angle);
+#endif
   servo_cur_angle[servo_num] = angle;
 
   ESP_LOGI(TAG, "Servo angle / Joint Angle %i %i / %i", servo_num, angle, get_joint_angle(servo_num));

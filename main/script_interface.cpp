@@ -36,6 +36,10 @@ void luaTaskFunc(void * parameter){
     lua_pop(luaState, 1);
   }
   web_send("log", "Lua task finished");
+  if (result.empty()) {
+    result = "ready";
+  }
+  
   ESP_LOGI(TAG, "%s", result.c_str());
   web_send("log", result);
   luaTaskHandle = NULL;
@@ -45,7 +49,7 @@ void luaTaskFunc(void * parameter){
 void script_run(const char* data) {
   script_stop();
   luaScript = data;
-  ESP_LOGI(TAG, "%s", data);
+  ESP_LOGI(TAG, "Running script:\n%s", data);
   xTaskCreate(luaTaskFunc, "Lua Task", 8000, NULL, 1, &luaTaskHandle);
 }
 
@@ -142,6 +146,7 @@ static void add_json_to_table(lua_State *lua_state, JsonVariant& val) {
     lua_newtable(lua_state);
     for (JsonPair kv : val.as<JsonObject>()) {
       const char* key = kv.key().c_str();
+      //ESP_LOGI(TAG, "found key: %s", key);
       JsonVariant val = kv.value();
       add_json_to_table(lua_state, key, val);
     }
@@ -152,7 +157,7 @@ static void add_json_to_table(lua_State *lua_state, JsonVariant& val) {
   } else if (val.is<bool>()) {
     lua_pushboolean(lua_state, val.as<bool>());
   } else {
-    ESP_LOGE(TAG, "Unknown type in config.json");
+    ESP_LOGE(TAG, "Unknown type in config.json, val %s", val.as<const char*>());
   }
 }
 
@@ -161,7 +166,12 @@ static int lua_get_config(lua_State *lua_state) {
   std::ifstream t("/spiffs/config.json");
   std::string configFile((std::istreambuf_iterator<char>(t)),
                   std::istreambuf_iterator<char>());
-  (void)deserializeJson(configDoc, configFile);
+  DeserializationError jsonError = deserializeJson(configDoc, configFile);
+//  ESP_LOGI(TAG, "Config read:\n %s", configFile.c_str());
+  if (jsonError) {
+    ESP_LOGE(TAG, "deserializeJson() failed (%s) for config file\n", jsonError.c_str());
+  }
+
   lua_newtable(lua_state);
   JsonVariant config = configDoc.as<JsonVariant>();
   add_json_to_table(lua_state, config);

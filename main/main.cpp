@@ -113,6 +113,7 @@ void setup() {
   std::string configFile((std::istreambuf_iterator<char>(t)),
                   std::istreambuf_iterator<char>());
   DeserializationError jsonError = deserializeJson(configDoc, configFile);
+  t.close();
 
 //  ESP_LOGI(TAG, "Config read:\n %s", configFile.c_str());
 
