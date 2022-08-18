@@ -120,7 +120,7 @@ RUN pip install -U colcon-common-extensions
 RUN sudo apt-get update && sudo apt-get install -y curl gnupg2 lsb-release
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 RUN sudo sh -c 'echo "deb [arch=$(dpkg --print-architecture)] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
-RUN sudo apt install python3-rosdep2
+RUN sudo apt-get update && sudo apt-get install -y python3-rosdep2
 RUN git clone -b galactic https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
 RUN rosdep update && rosdep install --from-paths src --ignore-src -y --rosdistro galactic
 RUN source /opt/ros/galactic/local_setup.sh
