@@ -144,12 +144,11 @@ void setup() {
       start_wifi(configDoc[wifi_ssid_key], configDoc[wifi_pwd_key]);
    }
 
-//     // Wifi is startet in ros_setup()
-//     ros_setup(configDoc); // TODO use ros also with eth
-//   }
-
 //  setupOta(configDoc[wifi_hostname_key]);
 #endif
+
+  ESP_LOGI(TAG, "Setup ROS");
+  ros_setup();
 
   ESP_LOGI(TAG, "Starting http server");
   web_setup();
