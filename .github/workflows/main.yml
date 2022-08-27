@@ -14,7 +14,7 @@ jobs:
         submodules: 'recursive'
 
     - name: Create build container
-      run: docker build -f .gitpod.Dockerfile -t roboprog-dev-container
+      run: docker build -t roboprog-dev-container - < .gitpod.Dockerfile
 
     - name: Build
       run: docker run -v $PWD:/srv -w/srv roboprog-dev-container idf.py build
