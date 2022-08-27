@@ -14,7 +14,12 @@ jobs:
         submodules: 'recursive'
 
     - name: Create build container
-      run: docker build -t local - < .gitpod.Dockerfile
+      run: |
+        cp .gitpod.Dockerfile ghdf
+        sed -i 's/gitpod.workspace.full/ubuntu:20.04/' ghdf
+        echo >> 'CMD ["/bin/bash"]' ghdf
+        docker build -t local - < ghdf
+        rm ghdf
 
     - name: Build
       run: docker run -it -v $PWD:/srv -w/srv local idf.py build
