@@ -25,8 +25,9 @@ In gitpod compile firmware with "idf.py build".
 
 
 # TODO
-* integrate ros again
-* build release bin file with github action, which then can be easily flashed with ESP32 flash tool
+* fix anything which is not working any longer after switching to plain esp idf
+* wifi settings hardcoded
+* implement over-the-air update
 * automated tests with qemu
 
 # REST API
@@ -45,10 +46,7 @@ In gitpod compile firmware with "idf.py build".
 * logWeb(string)
 
 # ROS2 commands
-* Start micro-ROS agent: docker run -it --rm --net=host microros/micro-ros-agent:galactic udp4 --port 8888 -v6
 * ros2 node list
 * ros2 topic list -t
 * ros2 interface show std_msgs/msg/Int32MultiArray
 * ros2 topic pub --once /micro_ros_arduino_subscriber std_msgs/msg/Int32MultiArray "{'data': [10, 20, 30, 40]}"
-
-Note: ROS interface needs Agent (at startup) because implementation is not based on embeddedRTPS yet (see https://github.com/micro-ROS/micro_ros_espidf_component)
