@@ -17,4 +17,4 @@ jobs:
       run: docker build -t local - < .gitpod.Dockerfile
 
     - name: Build
-      run: docker run -it -v $PWD:/srv -w/srv local echo "hello world"
+      run: docker run -v $PWD:/srv -w/srv local idf.py build
