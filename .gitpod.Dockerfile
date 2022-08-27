@@ -124,7 +124,3 @@ RUN sudo sh -c 'echo "deb [arch=$(dpkg --print-architecture)] http://packages.ro
 RUN sudo apt-get update && sudo apt-get install -y python3-rosdep2
 RUN git clone -b galactic https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
 RUN rosdep update && rosdep install --from-paths src --ignore-src -y --rosdistro galactic
-
-# misc
-RUN sudo echo "source /opt/esp/idf/export.sh" >> /etc/bash.bashrc
-RUN sudo echo "source source /opt/ros/galactic/local_setup.bash" >> /etc/bash.bashrc
