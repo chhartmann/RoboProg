@@ -17,4 +17,4 @@ jobs:
       run: docker build -t roboprog-dev-container - < .gitpod.Dockerfile
 
     - name: Build
-      run: docker run -v $PWD:/srv -w/srv roboprog-dev-container idf.py build
+      run: docker run -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
