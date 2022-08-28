@@ -46,6 +46,7 @@ In gitpod compile firmware with "idf.py build".
 * logWeb(string)
 
 # ROS2 commands
+* Start micro-ROS agent: docker run -it --rm --net=host microros/micro-ros-agent:galactic udp4 --port 8888 -v6
 * ros2 node list
 * ros2 topic list -t
 * ros2 interface show std_msgs/msg/Int32MultiArray
