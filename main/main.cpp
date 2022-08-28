@@ -129,26 +129,32 @@ void setup() {
     }
 #endif
 
+  bool network_connection = false;
+
 #ifdef BUILD_FOR_QEMU
 
   esp_log_level_set("esp_eth*", ESP_LOG_VERBOSE);
 
 
   ESP_LOGI(TAG, "Starting ethernet");
-  eth_start();
+  network_connection = eth_start();
 #else
   ESP_LOGI(TAG, "Starting wifi");
    if (configDoc[wifi_ssid_key] == "") {
 //TODO     WiFi.softAP("RobotProg");
    } else {
-      start_wifi(configDoc[wifi_ssid_key], configDoc[wifi_pwd_key]);
+      network_connection = start_wifi(configDoc[wifi_ssid_key], configDoc[wifi_pwd_key]);
    }
 
 //  setupOta(configDoc[wifi_hostname_key]);
 #endif
 
-  ESP_LOGI(TAG, "Setup ROS");
-  ros_setup();
+  if (network_connection) {
+      ESP_LOGI(TAG, "Setup ROS");
+      ros_setup(configDoc[ros_agent_ip_key]);
+  } else {
+      ESP_LOGI(TAG, "Network connection not established - skipping ROS setup");
+  }
 
   ESP_LOGI(TAG, "Starting http server");
   web_setup();

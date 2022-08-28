@@ -4,6 +4,7 @@
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
+#include <rmw_microros/rmw_microros.h>
 #include <std_msgs/msg/int32_multi_array.h>
 #include <servo_handler.h>
 
@@ -12,8 +13,6 @@
 rcl_subscription_t subscriber;
 std_msgs__msg__Int32MultiArray msg;
 rclc_executor_t executor;
-rclc_support_t support;
-rcl_allocator_t allocator;
 rcl_node_t node;
 rcl_timer_t timer;
 bool ros_connection_failed = false;
@@ -27,39 +26,48 @@ void subscription_callback(const void * msgin)
   }
 }
 
-void ros_setup() {
+void ros_setup(std::string agent_ip) {
+  rclc_support_t support;
+  rcl_allocator_t allocator;
 
-    // Initialize the ROS node
-    allocator = rcl_get_default_allocator();
-    RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  // Initialize the ROS node
+  allocator = rcl_get_default_allocator();
+  rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+  RCCHECK(rcl_init_options_init(&init_options, allocator));
 
-    // create node
-    RCCHECK(rclc_node_init_default(&node, "micro_ros_arduino_node", "", &support));
+  rmw_init_options_t* rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
+  RCCHECK(rmw_uros_options_set_udp_address(agent_ip.c_str(), "8888", rmw_options));
+  //RCCHECK(rmw_uros_discover_agent(rmw_options));
 
-    // create subscriber
-    RCCHECK(rclc_subscription_init_default(
-    &subscriber,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray),
-    "micro_ros_arduino_subscriber"));
+  RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator))
 
-    // Initialize message
-    static std_msgs__msg__MultiArrayDimension dim;
-    static char* dim_name = (char*)"joint_angle";
-    dim.label = {dim_name, strlen(dim_name), strlen(dim_name)};
-    dim.size = 1;
-    dim.stride = 0;
-    msg.layout.dim.data = &dim;
-    msg.layout.data_offset = 0;
-    msg.data.data = (int32_t*)malloc(sizeof(int32_t)*num_servos);
-    msg.data.size = 0;
-    msg.data.capacity = num_servos;
+  // create node
+  RCCHECK(rclc_node_init_default(&node, "micro_ros_robo_prog_node", "", &support));
 
-    // create executor
-    RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
-    RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));      
+  // create subscriber
+  RCCHECK(rclc_subscription_init_default(
+  &subscriber,
+  &node,
+  ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray),
+  "micro_ros_robo_prog_subscriber"));
+
+  // Initialize message
+  static std_msgs__msg__MultiArrayDimension dim;
+  static char* dim_name = (char*)"joint_angle";
+  dim.label = {dim_name, strlen(dim_name), strlen(dim_name)};
+  dim.size = 1;
+  dim.stride = 0;
+  msg.layout.dim.data = &dim;
+  msg.layout.data_offset = 0;
+  msg.data.data = (int32_t*)malloc(sizeof(int32_t)*num_servos);
+  msg.data.size = 0;
+  msg.data.capacity = num_servos;
+
+  // create executor
+  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+  RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));
 }
 
 void ros_loop() {
-    RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+//  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
 }

@@ -3,6 +3,6 @@
 
 #include <string>
 
-void start_wifi(std::string ssid, std::string password);
+bool start_wifi(std::string ssid, std::string password);
 
 #endif // __MY_WIFI

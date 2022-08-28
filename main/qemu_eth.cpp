@@ -1,3 +1,6 @@
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include <esp_eth.h>
 #include <esp_netif.h>
 #include <esp_event.h>
@@ -5,11 +8,15 @@
 #include <esp_err.h>
 #include <qemu_eth.h>
 
+#define ETH_CONNECTED_BIT BIT0
+#define ETH_FAIL_BIT      BIT1
+
 static const char *TAG = "qemu_eth";
 static esp_eth_handle_t s_eth_handle = NULL;
 static esp_eth_mac_t *s_mac = NULL;
 static esp_eth_phy_t *s_phy = NULL;
 static void* s_eth_glue = NULL;
+static EventGroupHandle_t s_eth_event_group;
 
 static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
                                  int32_t event_id, void *event_data)
@@ -19,6 +26,8 @@ static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
 
     ESP_LOGI(TAG, "Ethernet Got IP Address");
     ESP_LOGI(TAG, "ETHIP:" IPSTR, IP2STR(&ip_info->ip));
+
+    xEventGroupSetBits(s_eth_event_group, ETH_CONNECTED_BIT);
 }
 
 static void eth_event_handler(void *arg, esp_event_base_t event_base,
@@ -50,9 +59,11 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
 }
 
 
-void eth_start(void) {
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+bool eth_start(void) {
+  s_eth_event_group = xEventGroupCreate();
+
+  ESP_ERROR_CHECK(esp_netif_init());
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
 
   char *desc;
   esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
@@ -86,4 +97,20 @@ void eth_start(void) {
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
 
   esp_eth_start(s_eth_handle);
+
+  EventBits_t bits = xEventGroupWaitBits(s_eth_event_group,
+          ETH_CONNECTED_BIT | ETH_FAIL_BIT,
+          pdFALSE,
+          pdFALSE,
+          10000 / portTICK_PERIOD_MS);
+
+  if (bits & ETH_CONNECTED_BIT) {
+      ESP_LOGI(TAG, "Ethernet setup finished");
+  } else if (bits & ETH_FAIL_BIT) {
+      ESP_LOGI(TAG, "Failed to setup ethernet");
+  } else {
+      ESP_LOGE(TAG, "UNEXPECTED EVENT");
+  }
+
+  return ((bits & ETH_CONNECTED_BIT) != 0);
 }

@@ -45,7 +45,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(const char* ssid, const char* pwd)
+bool wifi_init_sta(const char* ssid, const char* pwd)
 {
     s_wifi_event_group = xEventGroupCreate();
 
@@ -84,7 +84,7 @@ void wifi_init_sta(const char* ssid, const char* pwd)
             WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
             pdFALSE,
             pdFALSE,
-            portMAX_DELAY);
+            10000 / portTICK_PERIOD_MS);
 
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "connected to ap");
@@ -93,10 +93,13 @@ void wifi_init_sta(const char* ssid, const char* pwd)
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
+
+    return ((bits & WIFI_CONNECTED_BIT) != 0);
 }
 
-void start_wifi(std::string ssid, std::string password)
+bool start_wifi(std::string ssid, std::string password)
 {
+    bool wifi_ok = false;
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       ESP_ERROR_CHECK(nvs_flash_erase());
@@ -106,10 +109,12 @@ void start_wifi(std::string ssid, std::string password)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 
-   wifi_init_sta(ssid.c_str(), password.c_str());
+   wifi_ok = wifi_init_sta(ssid.c_str(), password.c_str());
 
    ret = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA ,"RobotProg");
    if (ret != ESP_OK ) {
      ESP_LOGE(TAG,"failed to set hostname:%d",ret);
    }
+
+   return wifi_ok;
 }

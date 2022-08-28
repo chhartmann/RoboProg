@@ -19,5 +19,5 @@
 	"Wifi-SSID": "",
 	"Wifi-Password": "",
 	"Hostname": "ESP-RobotProg",
-	"ROS-Agent-IP": ""
+	"ROS-Agent-IP": "0.0.0.0"
 }
