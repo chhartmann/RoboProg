@@ -1,4 +1,6 @@
 #include <ros_interface.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "esp_log.h"
 #include <stdio.h>
 #include <rcl/error_handling.h>
@@ -19,11 +21,17 @@ bool ros_connection_failed = false;
 
 void subscription_callback(const void * msgin)
 {
+  ESP_LOGI("tag", "received ros message");
   const std_msgs__msg__Int32MultiArray * msg = (const std_msgs__msg__Int32MultiArray *)msgin;
 
   for (int i = 0; i < msg->data.size; ++i) {
     set_joint_angle(i, msg->data.data[i]);
   }
+}
+
+void micro_ros_task(void* arg) {
+    RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+    usleep(100000);
 }
 
 void ros_setup(std::string agent_ip) {
@@ -66,8 +74,6 @@ void ros_setup(std::string agent_ip) {
   // create executor
   RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));
-}
 
-void ros_loop() {
-//  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+  xTaskCreate(micro_ros_task, "uros_task", 16000, NULL, 5, NULL);
 }

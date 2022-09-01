@@ -118,7 +118,7 @@ void setup() {
 //  ESP_LOGI(TAG, "Config read:\n %s", configFile.c_str());
 
   if (jsonError) {
-    ESP_LOGE(TAG, "deserializeJson() failed (%s) for config file\n", jsonError.c_str());
+    ESP_LOGE(TAG, "deserializeJson() failed (%s) for config file", jsonError.c_str());
     while(1);
   }
 
@@ -172,14 +172,15 @@ void setup() {
     script_run(luaScript.c_str());
   }
 
-  while(1) loop();
+  while(1) {
+    loop();
+  }
 }
 
 void loop() {
     static int prev_joint_pos[num_servos] = {0};
 
     // ArduinoOTA.handle();
-    ros_loop();
 
     // if a servo has changed position, send it to the frontend
     bool publish_joint_pos = false;
@@ -193,7 +194,7 @@ void loop() {
     if (publish_joint_pos) {
       std::string joint_pos_json = get_joint_angles_as_json();
       web_send("pos", joint_pos_json);
-      // Serial.println("Web event: " + joint_pos_json);
+      ESP_LOGI(TAG, "pos: %s", joint_pos_json.c_str());
     }
 
     vTaskDelay( 10 / portTICK_PERIOD_MS); // necessary for watchdog reset
