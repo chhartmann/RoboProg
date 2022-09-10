@@ -18,7 +18,7 @@ Rest Api
 Run Qemu
     Log To Console    Starting Qemu...
     Start Process    ./build_qemu.sh    stdout=${TEMPDIR}/stdout.txt
-    FOR    ${counter}    IN RANGE    1    60
+    FOR    ${counter}    IN RANGE    1    90
         Sleep    1s
         ${processStatus}=    Is Process Running
         IF    ${processStatus}
@@ -28,10 +28,10 @@ Run Qemu
                 RETURN
             END
         ELSE
+            Log    ${stdout}
             BREAK
         END
     END
-    Log    ${stdout}
     Fail    "Start Qemu failed"
 
 Get Position Rest
