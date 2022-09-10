@@ -18,3 +18,6 @@ jobs:
 
     - name: Build
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
+
+    - name: Run Tests
+      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; robot tests/smoketest.robot"
