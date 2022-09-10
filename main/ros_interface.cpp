@@ -18,6 +18,9 @@ rcl_subscription_t subscriber;
 rclc_executor_t executor;
 rcl_node_t node;
 rcl_timer_t timer;
+rcl_allocator_t allocator;
+rclc_support_t support;
+
 bool ros_connection_failed = false;
 
 
@@ -40,9 +43,6 @@ void micro_ros_task(void* arg) {
 }
 
 void ros_setup(std::string agent_ip) {
-  rclc_support_t support;
-  rcl_allocator_t allocator;
-
   // Initialize the ROS node
   allocator = rcl_get_default_allocator();
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();

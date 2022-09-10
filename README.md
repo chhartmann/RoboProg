@@ -20,9 +20,12 @@ In gitpod compile firmware with "idf.py build".
 
 
 # How to debug with qemu
-* Build full image for qemu: ctrl*P task build and run qemu image
-* Now you can watch the log messages and start debugging
+Start debugging in VS Code (e.g. with F5) starts building for QEMU, runs QEMU and attaches debugger.
 
+# VS Code tasks
+Hit ctrl*p and type "task "
+* build and run qemu image
+* backtrace decoder"
 
 # TODO
 * fix anything which is not working any longer after switching to plain esp idf
