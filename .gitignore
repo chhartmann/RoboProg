@@ -11,6 +11,12 @@ main/wifi_secrets.h
 
 sdkconfig.old
 
+# robotframework tmp files
+log.html
+output.xml
+report.html
+interactive_console_output.xml
+
 # gtags
 GTAGS
 GRTAGS
