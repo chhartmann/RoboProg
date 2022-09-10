@@ -6,8 +6,29 @@
       {
          "label": "build and run qemu image",
          "type": "shell",
-         "command": "./build_qemu.sh -s", // -s for gdb connection
+         "command": "./build_qemu.sh",
          "problemMatcher": []
+      },
+      {
+         "label": "build and run qemu image, wait for gdb",
+         "type": "shell",
+         "command": "./build_qemu.sh -s -S", // -s for gdb, -S wait for gdb connection,
+         "isBackground": true,
+         "problemMatcher": {
+            "pattern": [
+               {
+                 "regexp": ".",
+                 "file": 1,
+                 "location": 2,
+                 "message": 3
+               }
+             ],
+            "background" : {
+               "activeOnStart": true,
+               "beginsPattern": "ninja all",
+               "endsPattern" : "Adding SPI flash device"
+            }
+         },
       },
       {
          "label": "backtrace decoder",

@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
@@ -12,12 +13,13 @@
 
 #define RCCHECK(fn) { if (!ros_connection_failed) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){ESP_LOGI("myros", "ROS failed in line %i with error code %i\n", __LINE__, temp_rc); ros_connection_failed = true;}} }
 
-rcl_subscription_t subscriber;
 std_msgs__msg__Int32MultiArray msg;
+rcl_subscription_t subscriber;
 rclc_executor_t executor;
 rcl_node_t node;
 rcl_timer_t timer;
 bool ros_connection_failed = false;
+
 
 void subscription_callback(const void * msgin)
 {
@@ -30,8 +32,11 @@ void subscription_callback(const void * msgin)
 }
 
 void micro_ros_task(void* arg) {
+  while (true) {
+//    ESP_LOGI("tag", "ros task");
     RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
     usleep(100000);
+  }
 }
 
 void ros_setup(std::string agent_ip) {

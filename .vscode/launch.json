@@ -13,7 +13,8 @@
          "cwd": "${workspaceRoot}",
          "remote": true,
          "gdbpath": "xtensa-esp32-elf-gdb",
-         "valuesFormatting": "parseText"
+         "valuesFormatting": "parseText",
+         "preLaunchTask": "build and run qemu image, wait for gdb",
       }
    ]
 }

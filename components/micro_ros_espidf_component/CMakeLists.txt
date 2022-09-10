@@ -49,6 +49,7 @@ externalproject_add(libmicroros_project
             IDF_VERSION_MAJOR=${IDF_VERSION_MAJOR}
             IDF_VERSION_MINOR=${IDF_VERSION_MINOR}
             EXTRA_ROS_PACKAGES=${EXTRA_ROS_PACKAGES}
+            DEBUG=1
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${COMPONENT_DIR}/libmicroros.a
     )
