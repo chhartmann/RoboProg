@@ -17,7 +17,7 @@ Rest Api
 *** Keywords ***
 Run Qemu
     Log To Console    Starting Qemu...
-    Start Process    /workspace/RoboProg/build_qemu.sh    stdout=${TEMPDIR}/stdout.txt
+    Start Process    ./build_qemu.sh    stdout=${TEMPDIR}/stdout.txt
     FOR    ${counter}    IN RANGE    1    60
         Sleep    1s
         ${processStatus}=    Is Process Running
