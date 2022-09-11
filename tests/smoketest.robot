@@ -4,8 +4,8 @@ Library             OperatingSystem
 Library             RequestsLibrary
 Library             JSONLibrary
 
-Suite Setup    Run Qemu
-Suite Teardown      Terminate All Processes    kill=True
+Suite Setup    Run Keywords    Run Microros Agent    Run Qemu
+Suite Teardown      Stop Processes
 
 
 *** Test Cases ***
@@ -13,6 +13,13 @@ Rest Api
     ${pos}=    Get Position Rest
     ${len}=    Get Length    ${pos}
     Should Be Equal As Integers    ${len}    4
+
+ROS Interface
+    ${target_pos}=    Convert String To JSON    [10, 20, 30, 40]
+    ${result}=    Run Process    ros2    topic    pub    --once    /micro_ros_robo_prog_subscriber    std_msgs/msg/Int32MultiArray    {'data': ${target_pos}}
+    Should Be Empty    ${result.stderr}
+    ${pos}=    Get Position Rest
+    Should Be Equal    ${pos}    ${target_pos}
 
 *** Keywords ***
 Run Qemu
@@ -34,8 +41,17 @@ Run Qemu
     END
     Fail    "Start Qemu failed"
 
+Run Microros Agent
+    Log To Console    Starting Microros Agent
+    ${result}=    Run Process    ./start_microros_agent.sh
+    Should Be Empty    ${result.stderr}
+
+Stop Processes
+    Terminate All Processes    kill=True
+    Run Process    ./stop_microros_agent.sh
+
 Get Position Rest
     ${response}=    GET    http://localhost:7654/rest/get_joint_angles
     Should Be Equal As Strings    ${response.reason}    OK
     ${result}=    Convert String to JSON    ${response.text}
-    [Return]    ${result}
+    RETURN    ${result}
