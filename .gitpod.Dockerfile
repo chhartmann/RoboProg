@@ -127,3 +127,5 @@ RUN rosdep update && rosdep install --from-paths src --ignore-src -y --rosdistro
 # for ROS tests
 RUN sudo apt-get update && sudo apt-get install -y ros-galactic-ros-base
 RUN pip install -U robotframework robotframework-requests robotframework-jsonlibrary
+RUN docker pull microros/micro-ros-agent:galactic
+
