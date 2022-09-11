@@ -20,4 +20,13 @@ jobs:
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
 
     - name: Run Tests
-      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; robot tests/smoketest.robot"
+      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; robot -d tests tests"
+
+    - name: Upload Testresult
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          tests/
+          !*.robot
+        retention-days: 30
