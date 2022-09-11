@@ -47,6 +47,7 @@ Run Microros Agent
     Log To Console    Starting Microros Agent
     Run Process    docker-up # necessary for github action
     Run Process    ./stop_microros_agent.sh
+    Run Process    docker    pull    microros/micro-ros-agent:galactic
     ${process}=    Run Process    ./start_microros_agent.sh
     Should Be Empty    ${process.stderr}
     Should Be Equal As Integers    ${process.rc}    0
