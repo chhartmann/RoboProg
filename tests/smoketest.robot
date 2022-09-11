@@ -46,8 +46,9 @@ Run Qemu
 Run Microros Agent
     Log To Console    Starting Microros Agent
     Run Process    ./stop_microros_agent.sh
+    Run Process    docker    pull    microros/micro-ros-agent:galactic
     ${process}=    Run Process    ./start_microros_agent.sh
-#    Should Be Empty    ${process.stderr} // is not empty when pulling image the first time
+    Should Be Empty    ${process.stderr}
     Should Be Equal As Integers    ${process.rc}    0
 
 Stop Processes

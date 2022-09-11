@@ -32,5 +32,5 @@ jobs:
         name: test-results
         path: |
           tests/
-          !*.robot
+          !tests/*.robot
         retention-days: 30
