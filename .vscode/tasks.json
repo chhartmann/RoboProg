@@ -4,15 +4,15 @@
    "version": "2.0.0",
    "tasks": [
       {
-         "label": "build and run qemu image",
+         "label": "build qemu image",
          "type": "shell",
-         "command": "./build_qemu.sh",
+         "command": "./qemu_build.sh",
          "problemMatcher": []
       },
       {
          "label": "build and run qemu image, wait for gdb",
          "type": "shell",
-         "command": "./build_qemu.sh -s -S", // -s for gdb, -S wait for gdb connection,
+         "command": "./qemu_build.sh && ./qemu_run.sh -s -S", // -s for gdb, -S wait for gdb connection,
          "isBackground": true,
          "problemMatcher": {
             "pattern": [

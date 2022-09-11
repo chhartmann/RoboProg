@@ -24,8 +24,9 @@ Start debugging in VS Code (e.g. with F5) starts building for QEMU, runs QEMU an
 
 # VS Code tasks
 Hit ctrl*p and type "task "
-* build and run qemu image
-* backtrace decoder"
+* build qemu image
+* build and run qemu image, wait for gdb
+* backtrace decoder
 
 # TODO
 * fix anything which is not working any longer after switching to plain esp idf

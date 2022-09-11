@@ -1,6 +1,6 @@
 tasks:
   - command: | 
-      source /opt/esp/idf/export.sh
+      
       source /opt/ros/galactic/local_setup.bash
 
 image:

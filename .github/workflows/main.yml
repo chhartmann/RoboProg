@@ -19,11 +19,15 @@ jobs:
     - name: Build
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
 
+    - name: Build for Qemu
+      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; ./qemu_build.sh"
+
     - name: Run Tests
-      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; robot -d tests tests"
+      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "robot -d tests tests"
 
     - name: Upload Testresult
       uses: actions/upload-artifact@v3
+      if: success() || failure()
       with:
         name: test-results
         path: |
