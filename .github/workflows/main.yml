@@ -16,7 +16,7 @@ jobs:
     - name: Cache Docker images.
       uses: ScribeMD/docker-cache@0.2.3
       with:
-        key: docker-${{ runner.os }}-${{ hashFiles(.gitpod.Dockerfile) }}
+        key: docker-${{ runner.os }}-${{ hashFiles(".gitpod.Dockerfile") }}
 
     - name: Create build container
       run: docker build -t roboprog-dev-container - < .gitpod.Dockerfile
