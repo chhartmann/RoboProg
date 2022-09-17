@@ -20,6 +20,7 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: create image cache dir
       run: mkdir -p ~/image-cache
 
     - id: image-cache
