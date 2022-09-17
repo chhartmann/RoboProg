@@ -7,24 +7,40 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      micro_ros_agent:
+        image: microros/micro-ros-agent:galactic
+        ports:
+          - 8888:8888
+        options: udp4 --port 8888
+
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
       with:
         submodules: 'recursive'
+      run: mkdir -p ~/image-cache
 
-    - name: Cache Docker images.
-      uses: ScribeMD/docker-cache@0.2.3
+    - id: image-cache
+      uses: actions/cache@v3
       with:
-        key: docker-${{ runner.os }}-${{ hashFiles('.gitpod.Dockerfile') }}
+        path: ~/image-cache
+        key: ${{ runner.os }}-${{ hashFiles('.gitpod.Dockerfile') }}
 
     - name: Create build container
-      run: docker build -t roboprog-dev-container - < .gitpod.Dockerfile
+      if: steps.image-cache.outputs.cache-hit != 'true'
+      run: |
+        docker build -t roboprog-dev-container - < .gitpod.Dockerfile
+        docker safe -o ~/image-cache/roboprog-dev-container.tar roboprog-dev-container
 
-    - name: Build
+    - name: Load build container from cache
+      if: steps.image-cache.outputs.cache-hit == 'true'
+      run: docker load -i ~/image-cache/roboprog-dev-container.tar
+
+    - name: Build RoboProg
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
 
-    - name: Build for Qemu
+    - name: Build RoboProg for Qemu
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; ./qemu_build.sh"
 
     - name: Run Tests
