@@ -33,7 +33,7 @@ jobs:
       if: steps.image-cache.outputs.cache-hit != 'true'
       run: |
         docker build -t roboprog-dev-container - < .gitpod.Dockerfile
-        docker safe -o ~/image-cache/roboprog-dev-container.tar roboprog-dev-container
+        docker save -o ~/image-cache/roboprog-dev-container.tar roboprog-dev-container
 
     - name: Load build container from cache
       if: steps.image-cache.outputs.cache-hit == 'true'
@@ -46,7 +46,9 @@ jobs:
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; ./qemu_build.sh"
 
     - name: Run Tests
-      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "robot -d tests tests"
+      run: |
+        docker run -d --name micro_ros_agent --net=host microros/micro-ros-agent:galactic udp4 --port 8888
+        docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "robot -d tests tests"
 
     - name: Upload Testresult
       uses: actions/upload-artifact@v3
