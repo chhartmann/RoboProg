@@ -26,10 +26,10 @@ jobs:
     - name: Create docker container
       uses: docker/build-push-action@v3
       with:
+        driver: docker
         file: .gitpod.Dockerfile
         tags: roboprog-dev-container
         push: false
-        load: true
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
 
