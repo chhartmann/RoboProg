@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full
+FROM gitpod/workspace-base
 
 USER gitpod
 
@@ -62,7 +62,7 @@ RUN echo IDF_CHECKOUT_REF=$IDF_CHECKOUT_REF IDF_CLONE_BRANCH_OR_TAG=$IDF_CLONE_B
       sudo git submodule update --init --recursive; \
     fi
 
-RUN sudo chown -R ${USER} /opt/esp
+RUN sudo chown -R gitpod /opt/esp
 
 # Install all the required tools
 RUN : \
@@ -111,7 +111,7 @@ RUN wget --no-verbose ${QEMU_URL} \
 
 ENV PATH=/opt/qemu/bin:${PATH}
 
-RUN sudo chown -R ${USER} /opt/qemu
+RUN sudo chown -R gitpod /opt/qemu
 
 RUN echo $($IDF_PATH/tools/idf_tools.py export) >> $HOME/.bashrc
 
