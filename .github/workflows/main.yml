@@ -19,27 +19,19 @@ jobs:
       uses: actions/cache@v3
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        key: ${{ runner.os }}-buildx-${{ hashFiles('.gitpod.Dockerfile') }}
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Build and push
+    - name: Create docker container
       uses: docker/build-push-action@v3
       with:
-        context: .
         file: .gitpod.Dockerfile
         tags: roboprog-dev-container
         push: false
+        load: true
         cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-    # - name: Create build container
-    #   run: docker build -t roboprog-dev-container - < .gitpod.Dockerfile
-
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
 
     - name: Build
       run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
