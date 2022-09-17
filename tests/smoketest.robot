@@ -4,8 +4,8 @@ Library             OperatingSystem
 Library             RequestsLibrary
 Library             JSONLibrary
 
-Suite Setup    Run Keywords    Run Microros Agent    Run Qemu
-Suite Teardown      Stop Processes
+Suite Setup    Run Keywords    Check For Microros Agent    Run Qemu
+Suite Teardown      Terminate All Processes    kill=True
 
 
 *** Test Cases ***
@@ -43,17 +43,9 @@ Run Qemu
     Log To Console    ${stdout}
     Fail    "Start Qemu failed"
 
-Run Microros Agent
-    Log To Console    Starting Microros Agent
-    Run Process    ./stop_microros_agent.sh
-    Run Process    docker    pull    microros/micro-ros-agent:galactic
-    ${process}=    Run Process    ./start_microros_agent.sh
-    Should Be Empty    ${process.stderr}
-    Should Be Equal As Integers    ${process.rc}    0
-
-Stop Processes
-    Terminate All Processes    kill=True
-    Run Process    ./stop_microros_agent.sh
+Check For Microros Agent
+    ${process}=    Run Process    netstat    -an    udp4
+    Should Contain    ${process.stdout}    :8888
 
 Get Position Rest
     ${response}=    GET    http://localhost:7654/rest/get_joint_angles
