@@ -18,8 +18,16 @@ http://www.eezyrobots.it/eba_mk1.html
 
 In gitpod compile firmware with "idf.py build".
 
+# Build and test with qemu
+* ./qemu_build.sh
+* ./qemu_run.sh
 
-# How to debug with qemu
+# Run tests with qemu
+* ./qemu_build.sh
+* docker run -it --rm --net=host microros/micro-ros-agent:galactic udp4 --port 8888 -v4
+* robot -d tests tests
+
+# Debug with qemu
 Start debugging in VS Code (e.g. with F5) starts building for QEMU, runs QEMU and attaches debugger.
 
 # VS Code tasks
