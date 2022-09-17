@@ -7,12 +7,12 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    services:
-      micro_ros_agent:
-        image: microros/micro-ros-agent:galactic
-        ports:
-          - 8888:8888
-        options: udp4 --port 8888
+    # services:
+    #   micro_ros_agent:
+    #     image: microros/micro-ros-agent:galactic
+    #     ports:
+    #       - 8888:8888
+    #     options: udp4 --port 8888
 
     steps:
     - name: Checkout repo
