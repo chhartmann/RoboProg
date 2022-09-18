@@ -20,7 +20,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/image-cache
-        key: docker-${{ hashFiles('**/.gitpod.Dockerfile') }}
+        key: ${{ runner.os }}-docker-${{ hashFiles('.gitpod.Dockerfile') }}
 
     - name: Create build container
       if: steps.image-cache.outputs.cache-hit != 'true'
