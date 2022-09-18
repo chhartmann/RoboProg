@@ -24,9 +24,11 @@ jobs:
 
     - name: Create build container
       if: steps.image-cache.outputs.cache-hit != 'true'
-      run: |
-        docker build -t roboprog-dev-container - < .gitpod.Dockerfile
-        docker save -o ~/image-cache/roboprog-dev-container.tar roboprog-dev-container
+      run: docker build -t roboprog-dev-container - < .gitpod.Dockerfile
+
+    - name: Cache build container
+      if: steps.image-cache.outputs.cache-hit != 'true'
+      run: docker save -o ~/image-cache/roboprog-dev-container.tar roboprog-dev-container
 
     - name: Load build container from cache
       if: steps.image-cache.outputs.cache-hit == 'true'
