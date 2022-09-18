@@ -126,5 +126,4 @@ RUN /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_
 
 # for ROS tests
 RUN sudo apt-get update && sudo apt-get install -y ros-galactic-ros-base
-RUN pip install -U robotframework robotframework-requests robotframework-jsonlibrary
-
+RUN pip install -U robotframework robotframework-requests robotframework-jsonlibrary robotframework-seleniumlibrary
