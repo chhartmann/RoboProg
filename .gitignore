@@ -19,6 +19,7 @@ interactive_console_output.xml
 tests/*.html
 tests/*.xml
 tests/*.log
+tests/*.png
 
 # gtags
 GTAGS

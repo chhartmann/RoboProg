@@ -24,8 +24,8 @@ In gitpod compile firmware with "idf.py build".
 
 # Run tests with qemu
 * ./qemu_build.sh
-* docker run -it --rm --net=host microros/micro-ros-agent:galactic udp4 --port 8888 -v4
-* robot -d tests tests
+* ./start_microros_agent.sh
+* ./run_tests.sh
 
 # Debug with qemu
 Start debugging in VS Code (e.g. with F5) starts building for QEMU, runs QEMU and attaches debugger.

@@ -126,4 +126,12 @@ RUN /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_
 
 # for ROS tests
 RUN sudo apt-get update && sudo apt-get install -y ros-galactic-ros-base
-RUN pip install -U robotframework robotframework-requests robotframework-jsonlibrary robotframework-seleniumlibrary
+
+# for robotframework with selenium and chrome
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN sudo apt install -y ./google-chrome-stable_current_amd64.deb
+RUN rm google-chrome-stable_current_amd64.deb
+RUN sudo apt-get update && sudo apt-get install -y python3.8-venv
+RUN python -m venv ~/rf_venv
+RUN bash -c "source ~/rf_venv/bin/activate && pip install -U robotframework robotframework-requests robotframework-jsonlibrary robotframework-seleniumlibrary webdrivermanager"
+RUN bash -c "source ~/rf_venv/bin/activate && webdrivermanager chrome"

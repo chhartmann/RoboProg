@@ -3,12 +3,16 @@ Library             Process
 Library             OperatingSystem
 Library             RequestsLibrary
 Library             JSONLibrary
+Library             SeleniumLibrary
 
 Suite Setup    Run Keywords    Check For Microros Agent    Run Qemu
 Suite Teardown      Terminate All Processes    kill=True
 
 
 *** Test Cases ***
+Dummy
+    Open Browser    https://www.google.com    headlesschrome
+
 Rest Api
     ${pos}=    Get Position Rest
     ${len}=    Get Length    ${pos}
