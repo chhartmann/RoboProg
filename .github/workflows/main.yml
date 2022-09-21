@@ -43,7 +43,7 @@ jobs:
     - name: Run Tests
       run: |
         docker run -d --name micro_ros_agent --net=host microros/micro-ros-agent:galactic udp4 --port 8888
-        docker run -u 0 --net=host -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "robot -d tests tests"
+        docker run -u 0 --net=host -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "run_tests.sh"
 
     - name: Upload Testresult
       uses: actions/upload-artifact@v3
