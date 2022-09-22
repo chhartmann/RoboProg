@@ -34,16 +34,19 @@ jobs:
       if: steps.image-cache.outputs.cache-hit == 'true'
       run: docker load -i ~/image-cache/roboprog-dev-container.tar
 
+    - name: chown source to share with container
+      run: sudo chown -R 33333:33333 .
+
     - name: Build RoboProg
-      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
+      run: docker run -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; idf.py build"
 
     - name: Build RoboProg for Qemu
-      run: docker run -u 0 -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; ./qemu_build.sh"
+      run: docker run -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "source /opt/esp/idf/export.sh; source /opt/ros/galactic/local_setup.bash; ./qemu_build.sh"
 
     - name: Run Tests
       run: |
         docker run -d --name micro_ros_agent --net=host microros/micro-ros-agent:galactic udp4 --port 8888
-        docker run -u 0 --net=host -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "./run_tests.sh"
+        docker run --net=host -v $PWD:/srv -w/srv roboprog-dev-container /bin/bash -c "./run_tests.sh"
 
     - name: Upload Testresult
       uses: actions/upload-artifact@v3
