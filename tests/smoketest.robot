@@ -29,7 +29,7 @@ ROS Interface
 Run Qemu
     Log To Console    Starting Qemu...
     ${process}=    Start Process    ./qemu_run.sh    stdout=${TEMPDIR}/qemu_stdout.txt    stderr=STDOUT
-    FOR    ${counter}    IN RANGE    1   60
+    FOR    ${counter}    IN RANGE    1   90
         Sleep    1s
         ${processStatus}=    Is Process Running
         IF    ${processStatus}
