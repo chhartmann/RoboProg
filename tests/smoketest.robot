@@ -6,24 +6,29 @@ Library             JSONLibrary
 Library             SeleniumLibrary
 
 Suite Setup    Run Keywords    Check For Microros Agent    Run Qemu
-Suite Teardown      Terminate All Processes    kill=True
+Suite Teardown      Cleanup
 
 
 *** Test Cases ***
-Dummy
-    Open Browser    https://www.google.com    headlesschrome
+Web Interface
+    Open Browser    http://localhost:7654    headlesschrome
+    Page Should Contain    function
 
-Rest Api
-    ${pos}=    Get Position Rest
-    ${len}=    Get Length    ${pos}
-    Should Be Equal As Integers    ${len}    4
+    # initial position is not set - should be fixed
+    # ${pos_rest}=    Get Position Rest
+    # ${pos_web}=    Get Position Web Interface
+    # Should Be Equal    ${pos_rest}    ${pos_web}
 
-ROS Interface
+
     ${target_pos}=    Convert String To JSON    [10, 20, 30, 40]
-    ${result}=    Run Process    ./send_ros_pos.sh    ${target_pos}
-    Should Be Empty    ${result.stderr}
-    ${pos}=    Get Position Rest
-    Should Be Equal    ${pos}    ${target_pos}
+    Set Position ROS    ${target_pos}
+    Check Position Rest    ${target_pos}
+    Check Position Web Interface    ${target_pos}
+
+    ${target_pos}=    Convert String To JSON    [15, 25, -35, 45]
+    Set Position Rest    ${target_pos}
+    Check Position Rest    ${target_pos}
+    Check Position Web Interface    ${target_pos}
 
 *** Keywords ***
 Run Qemu
@@ -47,12 +52,39 @@ Run Qemu
     Log To Console    ${stdout}
     Fail    "Start Qemu failed"
 
+Cleanup
+    Terminate All Processes    kill=True
+    Run Process    pkill    -f    Chrome
+    Run Process    pkill    -f    chromedriver
+
 Check For Microros Agent
     ${process}=    Run Process    netstat    -an    udp4
     Should Contain    ${process.stdout}    :8888
 
-Get Position Rest
+Check Position Rest
+    [Arguments]    ${expected_pos}
     ${response}=    GET    http://localhost:7654/rest/get_joint_angles
     Should Be Equal As Strings    ${response.reason}    OK
     ${result}=    Convert String to JSON    ${response.text}
-    RETURN    ${result}
+    Should Be Equal    ${expected_pos}    ${result}
+
+Check Position Web Interface
+    [Arguments]    ${expected_pos}
+    ${a1}=    Get Text    id:pos-a1
+    ${a2}=    Get Text    id:pos-a2
+    ${a3}=    Get Text    id:pos-a3
+    ${a4}=    Get Text    id:pos-a4
+    ${result}=    Convert String to JSON    [${a1}, ${a2}, ${a3}, ${a4}]
+    Should Be Equal    ${expected_pos}    ${result}
+
+Set Position Rest
+    [Arguments]    ${pos}
+    ${str_pos}    Convert JSON To String    ${pos}
+    ${resp}=    POST    http://localhost:7654/rest/set_joint_angles    ${str_pos}
+    Status Should Be    OK    ${resp}
+
+Set Position ROS
+    [Arguments]    ${pos}
+    ${result}=    Run Process    ./send_ros_pos.sh    ${pos}
+    Should Be Empty    ${result.stderr}
+
