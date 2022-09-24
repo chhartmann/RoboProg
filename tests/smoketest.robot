@@ -8,17 +8,18 @@ Library             SeleniumLibrary
 Suite Setup    Run Keywords    Check For Microros Agent    Run Qemu
 Suite Teardown      Cleanup
 
-
 *** Test Cases ***
 Web Interface
     Open Browser    http://localhost:7654    headlesschrome
     Page Should Contain    function
 
-    # initial position is not set - should be fixed
-    # ${pos_rest}=    Get Position Rest
-    # ${pos_web}=    Get Position Web Interface
-    # Should Be Equal    ${pos_rest}    ${pos_web}
+    ${config}=    Load Json From File    ${CURDIR}/../data/config.json
+    Validate Json By Schema File    ${config}    ${CURDIR}/../data/config-schema.json
 
+    # Click Button    Home
+    # ${pos}=    Get Value From Json    ${config}    $.home
+    # Check Position Rest    ${config}
+    # Check Position Web Interface    ${config}
 
     ${target_pos}=    Convert String To JSON    [10, 20, 30, 40]
     Set Position ROS    ${target_pos}
@@ -70,6 +71,7 @@ Check Position Rest
 
 Check Position Web Interface
     [Arguments]    ${expected_pos}
+    Sleep    2s
     ${a1}=    Get Text    id:pos-a1
     ${a2}=    Get Text    id:pos-a2
     ${a3}=    Get Text    id:pos-a3
