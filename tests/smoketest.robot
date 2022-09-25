@@ -16,14 +16,8 @@ Config Valid
 
 Web Interface Available
     Open Browser    http://localhost:7654    headlesschrome
-    Wait Until Element Contains    id:luaScriptEditor    function
+    Wait Until Element Contains    id:luaScriptEditor    function    30s
     Sleep    10
-
-Web Interface Home Button
-   Click Element    id:btn-home
-   ${pos}=    Get Value From Json    ${config}    $.home[*]
-   Check Position Web Interface    ${pos}
-   Repeat Keyword    5 times    Check Position Rest    ${pos}
 
 Web Interface Position Display Update
     ${target_pos}=    Convert String To JSON    [10, 20, 30, 40]
@@ -35,6 +29,25 @@ Web Interface Position Display Update
     Set Position Rest    ${target_pos}
     Check Position Web Interface    ${target_pos}
     Check Position Rest    ${target_pos}
+
+Web Interface Home Button
+   Click Element    id:btn-home
+   ${pos}=    Get Value From Json    ${config}    $.home[*]
+   Check Position Web Interface    ${pos}
+   Check Position Rest    ${pos}
+
+#Web Interface Manual Move Buttons
+#    ${target_pos}=    Get Value From Json    ${config}    $.limits[*].min
+#    Set Position Rest    ${target_pos}
+#    Check Position Rest    ${target_pos}
+   #TODO loop + buttons
+
+#    ${target_pos}=    Get Value From Json    ${config}    $.limits[*].max
+#    Set Position Rest    ${target_pos}
+#    Check Position Rest    ${target_pos}
+   #TODO loop - buttons
+
+
 
 *** Keywords ***
 Run Qemu
