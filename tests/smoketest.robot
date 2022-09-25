@@ -9,33 +9,38 @@ Suite Setup    Run Keywords    Check For Microros Agent    Run Qemu
 Suite Teardown      Cleanup
 
 *** Test Cases ***
-Web Interface
-    Open Browser    http://localhost:7654    headlesschrome
-    Page Should Contain    function
-
+Config Valid
     ${config}=    Load Json From File    ${CURDIR}/../data/config.json
+    Set Global Variable    ${config}
     Validate Json By Schema File    ${config}    ${CURDIR}/../data/config-schema.json
 
-    # Click Button    Home
-    # ${pos}=    Get Value From Json    ${config}    $.home
-    # Check Position Rest    ${config}
-    # Check Position Web Interface    ${config}
+Web Interface Available
+    Open Browser    http://localhost:7654    headlesschrome
+    Wait Until Element Contains    id:luaScriptEditor    function
+    Sleep    10
 
+Web Interface Home Button
+   Click Element    id:btn-home
+   ${pos}=    Get Value From Json    ${config}    $.home[*]
+   Check Position Web Interface    ${pos}
+   Repeat Keyword    5 times    Check Position Rest    ${pos}
+
+Web Interface Position Display Update
     ${target_pos}=    Convert String To JSON    [10, 20, 30, 40]
     Set Position ROS    ${target_pos}
-    Check Position Rest    ${target_pos}
     Check Position Web Interface    ${target_pos}
+    Check Position Rest    ${target_pos}
 
     ${target_pos}=    Convert String To JSON    [15, 25, -35, 45]
     Set Position Rest    ${target_pos}
-    Check Position Rest    ${target_pos}
     Check Position Web Interface    ${target_pos}
+    Check Position Rest    ${target_pos}
 
 *** Keywords ***
 Run Qemu
     Log To Console    Starting Qemu...
     ${process}=    Start Process    ./qemu_run.sh    stdout=${TEMPDIR}/qemu_stdout.txt    stderr=STDOUT
-    FOR    ${counter}    IN RANGE    1   90
+    FOR    ${counter}    IN RANGE    1   120
         Sleep    1s
         ${processStatus}=    Is Process Running
         IF    ${processStatus}
@@ -71,13 +76,10 @@ Check Position Rest
 
 Check Position Web Interface
     [Arguments]    ${expected_pos}
-    Sleep    2s
-    ${a1}=    Get Text    id:pos-a1
-    ${a2}=    Get Text    id:pos-a2
-    ${a3}=    Get Text    id:pos-a3
-    ${a4}=    Get Text    id:pos-a4
-    ${result}=    Convert String to JSON    [${a1}, ${a2}, ${a3}, ${a4}]
-    Should Be Equal    ${expected_pos}    ${result}
+    FOR     ${axis}     IN RANGE     1    5
+        ${pos}=    Get Value From Json    ${expected_pos}    $.[${${axis}-1}]
+        Wait Until Element Contains    id:pos-a${axis}    ${pos[0]}
+    END
 
 Set Position Rest
     [Arguments]    ${pos}
