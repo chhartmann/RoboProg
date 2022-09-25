@@ -4,6 +4,7 @@ Library             OperatingSystem
 Library             RequestsLibrary
 Library             JSONLibrary
 Library             SeleniumLibrary
+Library             String
 
 Suite Setup    Run Keywords    Check For Microros Agent    Run Qemu
 Suite Teardown      Cleanup
@@ -71,6 +72,16 @@ Web Interface Manual Move Buttons
         Check Position Rest    ${pos}
    END
 
+Web Interface Robo Script
+    Click Element    id:btn-clear-lua
+    ${script}=    Get text    id:luaScriptEditor
+    Should Be Equal    ${script}    1
+    Click Element    id:btn-reload-lua
+    Wait Until Element Contains    id:luaScriptEditor    function    10s
+    ${script}=    Get text    id:luaScriptEditor
+    ${script}=    Remove String Using Regexp    ${script}    ^[0-9\n]*
+    ${expect}=    Get File    ${CURDIR}/../data/script.lua
+#    Should Be Equal    ${expect}    ${script}
 
 
 *** Keywords ***
@@ -128,4 +139,3 @@ Set Position ROS
     [Arguments]    ${pos}
     ${result}=    Run Process    ./send_ros_pos.sh    ${pos}
     Should Be Empty    ${result.stderr}
-
