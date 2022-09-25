@@ -31,21 +31,45 @@ Web Interface Position Display Update
     Check Position Rest    ${target_pos}
 
 Web Interface Home Button
-   Click Element    id:btn-home
-   ${pos}=    Get Value From Json    ${config}    $.home[*]
-   Check Position Web Interface    ${pos}
-   Check Position Rest    ${pos}
+    Click Element    id:btn-home
+    ${pos}=    Get Value From Json    ${config}    $.home[*]
+    Check Position Web Interface    ${pos}
+    Check Position Rest    ${pos}
 
-#Web Interface Manual Move Buttons
-#    ${target_pos}=    Get Value From Json    ${config}    $.limits[*].min
-#    Set Position Rest    ${target_pos}
-#    Check Position Rest    ${target_pos}
-   #TODO loop + buttons
+Web Interface Manual Move Buttons
+    ${pos}=    Get Value From Json    ${config}    $.limits[*].min
+    Set Position Rest    ${pos}
+    Check Position Rest    ${pos}
+    FOR    ${axis}    IN RANGE    1    5
+        Click Element    id:btn-a${axis}-fast-inc
+        ${cur}=    Get Value From Json    ${pos}    $.[${${axis} - 1}]
+        ${pos}=    Update Value To Json    ${pos}    $.[${${axis} - 1}]    ${${cur[0] + 10}}
+        Check Position Web Interface    ${pos}
+        Check Position Rest    ${pos}
 
-#    ${target_pos}=    Get Value From Json    ${config}    $.limits[*].max
-#    Set Position Rest    ${target_pos}
-#    Check Position Rest    ${target_pos}
-   #TODO loop - buttons
+        Click Element    id:btn-a${axis}-inc
+        ${cur}=    Get Value From Json    ${pos}    $.[${${axis} - 1}]
+        ${pos}=    Update Value To Json    ${pos}    $.[${${axis} - 1}]    ${${cur[0] + 1}}
+        Check Position Web Interface    ${pos}
+        Check Position Rest    ${pos}
+   END
+
+    ${pos}=    Get Value From Json    ${config}    $.limits[*].max
+    Set Position Rest    ${pos}
+    Check Position Rest    ${pos}
+    FOR    ${axis}    IN RANGE    1    5
+        Click Element    id:btn-a${axis}-fast-dec
+        ${cur}=    Get Value From Json    ${pos}    $.[${${axis} - 1}]
+        ${pos}=    Update Value To Json    ${pos}    $.[${${axis} - 1}]    ${${cur[0] - 10}}
+        Check Position Web Interface    ${pos}
+        Check Position Rest    ${pos}
+
+        Click Element    id:btn-a${axis}-dec
+        ${cur}=    Get Value From Json    ${pos}    $.[${${axis} - 1}]
+        ${pos}=    Update Value To Json    ${pos}    $.[${${axis} - 1}]    ${${cur[0] - 1}}
+        Check Position Web Interface    ${pos}
+        Check Position Rest    ${pos}
+   END
 
 
 
