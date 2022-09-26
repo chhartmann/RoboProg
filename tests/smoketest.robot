@@ -21,15 +21,15 @@ Web Interface Available
     Sleep    10
 
 Web Interface Position Display Update
-    ${target_pos}=    Convert String To JSON    [10, 20, 30, 40]
-    Set Position ROS    ${target_pos}
-    Check Position Web Interface    ${target_pos}
-    Check Position Rest    ${target_pos}
+    ${pos}=    Convert String To JSON    [10, 20, 30, 40]
+    Set Position ROS    ${pos}
+    Check Position Web Interface    ${pos}
+    Check Position Rest    ${pos}
 
-    ${target_pos}=    Convert String To JSON    [15, 25, -35, 45]
-    Set Position Rest    ${target_pos}
-    Check Position Web Interface    ${target_pos}
-    Check Position Rest    ${target_pos}
+    ${pos}=    Convert String To JSON    [15, 25, -35, 45]
+    Set Position Rest    ${pos}
+    Check Position Web Interface    ${pos}
+    Check Position Rest    ${pos}
 
 Web Interface Home Button
     Click Element    id:btn-home
@@ -72,16 +72,34 @@ Web Interface Manual Move Buttons
         Check Position Rest    ${pos}
    END
 
-Web Interface Robo Script
+Web Interface Robo Script Reload And Clear
     Click Element    id:btn-clear-lua
     ${script}=    Get text    id:luaScriptEditor
     Should Be Equal    ${script}    1
     Click Element    id:btn-reload-lua
     Wait Until Element Contains    id:luaScriptEditor    function    10s
-    ${script}=    Get text    id:luaScriptEditor
-    ${script}=    Remove String Using Regexp    ${script}    ^[0-9\n]*
-    ${expect}=    Get File    ${CURDIR}/../data/script.lua
-#    Should Be Equal    ${expect}    ${script}
+    ${visible_script}=    Get text    css:div.ace_content
+    ${full_script}=    Get File    ${CURDIR}/../data/script.lua
+    Should Contain    ${{$full_script.replace('\n', '')}}    ${{$visible_script.replace('\n', '')}}
+
+Web Interface Robo Script MoveTo And Clear
+    ${pos}=    Convert String To JSON    [10, 20, 30, 40]
+    Set Position Rest    ${pos}
+    Check Position Web Interface    ${pos}
+    Click Element    id:btn-clear-lua
+    Wait Until Element Does Not Contain    css:div.ace_content    function    10s
+    Click Element    id:btn-touchup-lua
+    Wait Until Element Contains    css:div.ace_content    setJointAngles(10,20,30,40)
+
+# Web Interface Robo Script Save And Reload
+#     Set Local Variable    ${script}    logWeb("hello world")
+#     Execute Javascript    window.luaEditor.setValue('${script}')
+#     Wait Until Element Contains    css:div.ace_content    ${script}    10s
+#     Click Element    id:btn-save-lua
+#     Click Element    id:btn-clear-lua
+#     Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
+#     Click Element    id:btn-reload-lua
+#     Wait Until Element Contains    css:div.ace_content    ${script}    10s
 
 
 *** Keywords ***
