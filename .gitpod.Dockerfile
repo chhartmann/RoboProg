@@ -96,7 +96,7 @@ RUN sudo apt-get update \
 RUN sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/5.4.0-77-generic/usbip 20
 
 # QEMU
-ENV QEMU_REL=esp-develop-20220203
+ENV QEMU_REL=esp-develop-20220919
 #ENV QEMU_SHA256=44c130226bdce9aff6abf0aeaab44f09fe4f2d71a5f9225ac1708d68e4852c02
 ENV QEMU_DIST=qemu-${QEMU_REL}.tar.bz2
 ENV QEMU_URL=https://github.com/espressif/qemu/releases/download/${QEMU_REL}/${QEMU_DIST}
