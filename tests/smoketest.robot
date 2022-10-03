@@ -99,7 +99,7 @@ Web Interface Robo Script Save And Reload
     Click Element    id:btn-clear-lua
     Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
     Click Element    id:btn-reload-lua
-    Wait Until Element Contains    css:div.ace_content    ${script}    10s
+    Wait Until Element Contains    css:div.ace_content    ${script}    30s
 
 
 *** Keywords ***

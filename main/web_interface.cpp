@@ -111,7 +111,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
     fclose(file);
     ESP_LOGI(TAG, "File %s uploaded successfully", filename.c_str());
     httpd_resp_set_hdr(req, "Connection", "close");
-  httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
   }
 }

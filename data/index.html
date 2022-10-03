@@ -174,7 +174,7 @@ margin-left: 100px; /* Same as the width of the sidenav */
     const configEditor = new JSONEditor(document.getElementById('jsoneditor'), options);
 
     ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14");
-    var luaEditor = ace.edit("luaScriptEditor");
+    luaEditor = ace.edit("luaScriptEditor");
     luaEditor.setTheme("ace/theme/monokai");
     luaEditor.session.setMode("ace/mode/lua");
 //    luaEditor.setAutoScrollEditorIntoView(true);

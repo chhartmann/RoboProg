@@ -4,7 +4,7 @@
 
 #include "esp_err.h"
 #include "esp_log.h"
-#include "esp_spiffs.h"
+#include "esp_littlefs.h"
 #include "esp_partition.h"
 
 #include <freertos/FreeRTOS.h>
@@ -79,16 +79,16 @@ void setup_spiffs() {
       ESP_LOGE(TAG, "partition not found!");
   }
 
-  esp_vfs_spiffs_conf_t conf = {
+  esp_vfs_littlefs_conf_t  conf = {
     .base_path = "/spiffs",
     .partition_label = "storage",
-    .max_files = 5,
-    .format_if_mount_failed = false
+    .format_if_mount_failed = false,
+    .dont_mount = false,
   };
 
   // Use settings defined above to initialize and mount SPIFFS filesystem.
   // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
-  esp_err_t ret = esp_vfs_spiffs_register(&conf);
+  esp_err_t ret = esp_vfs_littlefs_register(&conf);
 
   if (ret != ESP_OK) {
       if (ret == ESP_FAIL) {
