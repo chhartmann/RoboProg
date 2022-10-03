@@ -91,15 +91,15 @@ Web Interface Robo Script MoveTo And Clear
     Click Element    id:btn-touchup-lua
     Wait Until Element Contains    css:div.ace_content    setJointAngles(10,20,30,40)
 
-# Web Interface Robo Script Save And Reload
-#     Set Local Variable    ${script}    logWeb("hello world")
-#     Execute Javascript    window.luaEditor.setValue('${script}')
-#     Wait Until Element Contains    css:div.ace_content    ${script}    10s
-#     Click Element    id:btn-save-lua
-#     Click Element    id:btn-clear-lua
-#     Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
-#     Click Element    id:btn-reload-lua
-#     Wait Until Element Contains    css:div.ace_content    ${script}    10s
+Web Interface Robo Script Save And Reload
+    Set Local Variable    ${script}    logWeb("hello world")
+    Execute Javascript    window.luaEditor.setValue('${script}')
+    Wait Until Element Contains    css:div.ace_content    ${script}    10s
+    Click Element    id:btn-save-lua
+    Click Element    id:btn-clear-lua
+    Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
+    Click Element    id:btn-reload-lua
+    Wait Until Element Contains    css:div.ace_content    ${script}    10s
 
 
 *** Keywords ***

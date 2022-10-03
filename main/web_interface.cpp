@@ -86,6 +86,7 @@ esp_err_t download_get_handler(httpd_req_t *req) {
           (void)httpd_resp_send_chunk(req, chunk, chunksize);
       }
     } while (chunksize != 0);
+    fclose(file);
 
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_chunk(req, NULL, 0);
