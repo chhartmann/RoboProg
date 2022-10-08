@@ -2,13 +2,15 @@ print = function(str)
     logWeb(str)
 end
 
-Robot = {a1 = 0, a2 = 0, a3 = 0, a4 = 0}
-
-function Robot:new(o, cfg)
+function Robot:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
-    self.cfg = cfg
+    self.a1 = 0
+    self.a2 = 0
+    self.a3 = 0
+    self.a4 = 0
+    self.cfg = getConfig()
     return o
 end
 
@@ -25,10 +27,10 @@ function Robot:moveRel(a1, a2, a3)
 end
 
 function Robot:moveHome()
-    self.a1 = cfg["home"][1]
-    self.a2 = cfg["home"][2]
-    self.a3 = cfg["home"][3]
-    self.a4 = cfg["home"][4]
+    self.a1 = self.cfg["home"][1]
+    self.a2 = self.cfg["home"][2]
+    self.a3 = self.cfg["home"][3]
+    self.a4 = self.cfg["home"][4]
     self:move()
 end
 
@@ -43,7 +45,7 @@ function Robot:gripperClose()
 end
 
 print("hello world")
-r = Robot:new(getConfig())
+r = Robot:new()
 r:moveHome()
 r:moveRel(0, -30, -30)
 r:gripperClose()
