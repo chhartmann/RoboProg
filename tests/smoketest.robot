@@ -21,13 +21,6 @@ Web Interface Available
     Set Window Size    800    1000
     Sleep    10
 
-Web Interface Robo Script Run
-    Click Element    id:btn-run-lua
-    Wait Until Web Log Contains    Lua task started
-    Wait Until Web Log Contains    hello world
-    Wait Until Web Log Contains    Lua task finished
-    Wait Until Web Log Contains    ready
-
 Web Interface Position Display Update
     ${pos}=    Convert String To JSON    [10, 20, 30, 40]
     Set Position ROS    ${pos}
@@ -99,17 +92,24 @@ Web Interface Robo Script MoveTo And Clear
     Click Element    id:btn-touchup-lua
     Wait Until Element Contains    css:div.ace_content    setJointAngles(10,20,30,40)
 
-#TODO backup and restore lua-script
-# Web Interface Robo Script Save And Reload
-#     Set Local Variable    ${script}    logWeb("hello world")
-#     Execute Javascript    window.luaEditor.setValue('${script}')
-#     Wait Until Element Contains    css:div.ace_content    ${script}    10s
-#     Click Element    id:btn-save-lua
-#     Click Element    id:btn-clear-lua
-#     Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
-#     Click Element    id:btn-reload-lua
-#     Wait Until Element Contains    css:div.ace_content    ${script}    30s
+Web Interface Robo Script Save And Reload
+    Set Local Variable    ${script}    logWeb("hello world")
+    Execute Javascript    window.luaEditor.setValue('${script}')
+    Wait Until Element Contains    css:div.ace_content    ${script}    10s
+    Click Element    id:btn-save-lua
+    Click Element    id:btn-clear-lua
+    Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
+    Click Element    id:btn-reload-lua
+    Wait Until Element Contains    css:div.ace_content    ${script}    30s
+    ${restore}=    Get File    ${CURDIR}/../data/script.lua
+    POST    http://localhost:7654/upload/script.lua    ${restore}
 
+Web Interface Robo Script Run
+    Click Element    id:btn-run-lua
+    Wait Until Web Log Contains    Lua task started
+    Wait Until Web Log Contains    hello world
+    Wait Until Web Log Contains    Lua task finished
+    Wait Until Web Log Contains    ready
 
 *** Keywords ***
 Run Qemu
