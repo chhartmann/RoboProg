@@ -2,15 +2,11 @@ print = function(str)
     logWeb(str)
 end
 
+Robot = {a1 = 0, a2=0, a3=0, cfg=getConfig()}
 function Robot:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
-    self.a1 = 0
-    self.a2 = 0
-    self.a3 = 0
-    self.a4 = 0
-    self.cfg = getConfig()
     return o
 end
 

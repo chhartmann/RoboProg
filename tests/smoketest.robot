@@ -18,7 +18,15 @@ Config Valid
 Web Interface Available
     Open Browser    http://localhost:7654    headlesschrome
     Wait Until Element Contains    id:luaScriptEditor    function    30s
+    Set Window Size    800    1000
     Sleep    10
+
+Web Interface Robo Script Run
+    Click Element    id:btn-run-lua
+    Wait Until Web Log Contains    Lua task started
+    Wait Until Web Log Contains    hello world
+    Wait Until Web Log Contains    Lua task finished
+    Wait Until Web Log Contains    ready
 
 Web Interface Position Display Update
     ${pos}=    Convert String To JSON    [10, 20, 30, 40]
@@ -91,15 +99,16 @@ Web Interface Robo Script MoveTo And Clear
     Click Element    id:btn-touchup-lua
     Wait Until Element Contains    css:div.ace_content    setJointAngles(10,20,30,40)
 
-Web Interface Robo Script Save And Reload
-    Set Local Variable    ${script}    logWeb("hello world")
-    Execute Javascript    window.luaEditor.setValue('${script}')
-    Wait Until Element Contains    css:div.ace_content    ${script}    10s
-    Click Element    id:btn-save-lua
-    Click Element    id:btn-clear-lua
-    Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
-    Click Element    id:btn-reload-lua
-    Wait Until Element Contains    css:div.ace_content    ${script}    30s
+#TODO backup and restore lua-script
+# Web Interface Robo Script Save And Reload
+#     Set Local Variable    ${script}    logWeb("hello world")
+#     Execute Javascript    window.luaEditor.setValue('${script}')
+#     Wait Until Element Contains    css:div.ace_content    ${script}    10s
+#     Click Element    id:btn-save-lua
+#     Click Element    id:btn-clear-lua
+#     Wait Until Element Does Not Contain    css:div.ace_content    ${script}    10s
+#     Click Element    id:btn-reload-lua
+#     Wait Until Element Contains    css:div.ace_content    ${script}    30s
 
 
 *** Keywords ***
@@ -157,3 +166,15 @@ Set Position ROS
     [Arguments]    ${pos}
     ${result}=    Run Process    ./send_ros_pos.sh    ${pos}
     Should Be Empty    ${result.stderr}
+
+Wait Until Web Log Contains
+    [Arguments]    ${part}
+    FOR    ${counter}    IN RANGE    1   10
+    Sleep    1s
+    ${text}=    Get Element Attribute   id:luaScriptOutput    value
+        IF    "${part}" in """${text}"""
+            RETURN
+        END
+    END
+    ${text}=    Get Element Attribute   id:luaScriptOutput    value
+    Fail    "${pos}"" not in "${text}"
